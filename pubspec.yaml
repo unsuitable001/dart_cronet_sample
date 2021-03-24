@@ -1,0 +1,21 @@
+name: cronet_sample
+description: A cronet based HTTP Library sample.
+version: 1.0.0
+
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+
+dependencies:
+  ffi: ^1.0.0
+  ffigen: ^2.4.0
+
+ffigen:
+  name: 'Cronet'
+  description: 'Bindings to Cronet'
+  output: 'generated_bindings.dart'
+  array-workaround: true
+  headers:
+    entry-points:
+      - 'cronet/cronet/include/cronet.idl_c.h'
+    include-directives:
+      - 'cronet/cronet/include/**.h'
