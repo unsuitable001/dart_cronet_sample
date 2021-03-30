@@ -16,6 +16,12 @@ ffigen:
   array-workaround: true
   headers:
     entry-points:
-      - 'cronet/cronet/include/cronet.idl_c.h'
+      - 'wrapper/wrapper.h'
     include-directives:
-      - 'cronet/cronet/include/**.h'
+      - 'wrapper/wrapper.h'
+      - 'dart_api.h'
+      - 'dart_native_api.h'
+      - 'dart_api_dl.h'
+      - 'wrapper_export.h'
+  compiler-opts:
+    - '-I/usr/lib/dart/include/ -DDART_SHARED_LIB'

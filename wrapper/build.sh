@@ -1,0 +1,1 @@
+g++ -fPIC -rdynamic -shared -W -o wrapper.so wrapper.cc sample_executor.cc -ldl -I/usr/lib/dart/include/ -DDART_SHARED_LIB
