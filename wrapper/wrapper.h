@@ -2,10 +2,10 @@
 #ifndef WRAPPER_H_
 #define WRAPPER_H_
 
-#include "dart_api.h"
-#include "dart_native_api.h"
+// #include "dart_api.h"
+// #include "dart_native_api.h"
 
-// #include "dart_api_dl.h"
+#include "dart_api_dl.h"
 
 
 #include"wrapper_export.h"
@@ -30,7 +30,7 @@ DART_EXPORT void registerCallbackHandler(Dart_Port nativePort);
 
 DART_EXPORT void dispatchCallback(char* methodname); // just for testing
 
-// DART_EXPORT intptr_t InitDartApiDL(void* data);
+DART_EXPORT intptr_t InitDartApiDL(void* data);
 
 /* typedefs, enums & struct declaration from cronet. Derived from cronet.idl_c.h */
 
@@ -277,8 +277,8 @@ DART_EXPORT Cronet_RESULT Cronet_UrlRequest_Init(Cronet_UrlRequestPtr self, Cron
 
 // CRONET_EXPORT void Cronet_Buffer_InitWithAlloc(Cronet_BufferPtr self, uint64_t size);
 
-// CRONET_EXPORT uint64_t Cronet_Buffer_GetSize(Cronet_BufferPtr self);
-// CRONET_EXPORT Cronet_RawDataPtr Cronet_Buffer_GetData(Cronet_BufferPtr self);
+CRONET_EXPORT uint64_t Cronet_Buffer_GetSize(Cronet_BufferPtr self);
+CRONET_EXPORT Cronet_RawDataPtr Cronet_Buffer_GetData(Cronet_BufferPtr self);
 
 
 // CRONET_EXPORT

@@ -52,6 +52,19 @@ class Cronet {
   late final _dart_dispatchCallback _dispatchCallback =
       _dispatchCallback_ptr.asFunction<_dart_dispatchCallback>();
 
+  int InitDartApiDL(
+    ffi.Pointer<ffi.Void> data,
+  ) {
+    return _InitDartApiDL(
+      data,
+    );
+  }
+
+  late final _InitDartApiDL_ptr =
+      _lookup<ffi.NativeFunction<_c_InitDartApiDL>>('InitDartApiDL');
+  late final _dart_InitDartApiDL _InitDartApiDL =
+      _InitDartApiDL_ptr.asFunction<_dart_InitDartApiDL>();
+
   ffi.Pointer<Cronet_Engine> Cronet_Engine_Create() {
     return _Cronet_Engine_Create();
   }
@@ -327,6 +340,34 @@ class Cronet {
           'Cronet_UrlRequest_Init');
   late final _dart_Cronet_UrlRequest_Init _Cronet_UrlRequest_Init =
       _Cronet_UrlRequest_Init_ptr.asFunction<_dart_Cronet_UrlRequest_Init>();
+
+  int Cronet_Buffer_GetSize(
+    ffi.Pointer<Cronet_Buffer> self,
+  ) {
+    return _Cronet_Buffer_GetSize(
+      self,
+    );
+  }
+
+  late final _Cronet_Buffer_GetSize_ptr =
+      _lookup<ffi.NativeFunction<_c_Cronet_Buffer_GetSize>>(
+          'Cronet_Buffer_GetSize');
+  late final _dart_Cronet_Buffer_GetSize _Cronet_Buffer_GetSize =
+      _Cronet_Buffer_GetSize_ptr.asFunction<_dart_Cronet_Buffer_GetSize>();
+
+  ffi.Pointer<ffi.Void> Cronet_Buffer_GetData(
+    ffi.Pointer<Cronet_Buffer> self,
+  ) {
+    return _Cronet_Buffer_GetData(
+      self,
+    );
+  }
+
+  late final _Cronet_Buffer_GetData_ptr =
+      _lookup<ffi.NativeFunction<_c_Cronet_Buffer_GetData>>(
+          'Cronet_Buffer_GetData');
+  late final _dart_Cronet_Buffer_GetData _Cronet_Buffer_GetData =
+      _Cronet_Buffer_GetData_ptr.asFunction<_dart_Cronet_Buffer_GetData>();
 }
 
 class Cronet_Buffer extends ffi.Opaque {}
@@ -505,6 +546,14 @@ typedef _dart_dispatchCallback = void Function(
   ffi.Pointer<ffi.Int8> methodname,
 );
 
+typedef _c_InitDartApiDL = ffi.IntPtr Function(
+  ffi.Pointer<ffi.Void> data,
+);
+
+typedef _dart_InitDartApiDL = int Function(
+  ffi.Pointer<ffi.Void> data,
+);
+
 typedef _c_Cronet_Engine_Create = ffi.Pointer<Cronet_Engine> Function();
 
 typedef _dart_Cronet_Engine_Create = ffi.Pointer<Cronet_Engine> Function();
@@ -657,4 +706,20 @@ typedef _dart_Cronet_UrlRequest_Init = int Function(
   ffi.Pointer<Cronet_Engine> engine,
   ffi.Pointer<ffi.Int8> url,
   ffi.Pointer<Cronet_UrlRequestParams> params,
+);
+
+typedef _c_Cronet_Buffer_GetSize = ffi.Uint64 Function(
+  ffi.Pointer<Cronet_Buffer> self,
+);
+
+typedef _dart_Cronet_Buffer_GetSize = int Function(
+  ffi.Pointer<Cronet_Buffer> self,
+);
+
+typedef _c_Cronet_Buffer_GetData = ffi.Pointer<ffi.Void> Function(
+  ffi.Pointer<Cronet_Buffer> self,
+);
+
+typedef _dart_Cronet_Buffer_GetData = ffi.Pointer<ffi.Void> Function(
+  ffi.Pointer<Cronet_Buffer> self,
 );

@@ -11,8 +11,12 @@ final _cronet = Cronet(DynamicLibrary.open('wrapper/wrapper.so'));
 
 void main(List<String> args) {
 
+  _cronet.InitDartApiDL(NativeApi.initializeApiDLData);
+
   print("Hello From Cronet");
   ReceivePort _rp = ReceivePort();
+
+  
   
   Pointer<Cronet_Engine> cronet_engine = _cronet.Cronet_Engine_Create();
   print('Running Cronet Version: ${_cronet.Cronet_Engine_GetVersionString(cronet_engine).cast<Utf8>().toDartString()}');
