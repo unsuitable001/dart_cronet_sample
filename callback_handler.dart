@@ -25,6 +25,9 @@ class _CallbackRequestMessage {
 class CallbackHandler {
   final ReceivePort _receivePort;
   final Cronet cronet;
+
+  final stopwatch =  Stopwatch()..start();  // for benchmarking perposes only
+
   CallbackHandler(this._receivePort, this.cronet) {
     
     cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
@@ -61,6 +64,7 @@ class CallbackHandler {
         case 'OnFailed':
         case 'OnCanceled':
         case 'OnSucceeded': {
+          print("Cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms");
           _receivePort.close();
         }
         break;
@@ -69,11 +73,6 @@ class CallbackHandler {
         }
       }
 
-      // if(reqMessage.method == 'OnReadCompleted') {
-      //   print("OnResponseStarted");
-      // } else {
-      //   print("Other callbacks");
-      // }
     }).onError((error) => print(error));
   }
 }

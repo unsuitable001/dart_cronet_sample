@@ -34,3 +34,37 @@ You'll get the HTML page of `example.com` along with some other texts (I used th
 
 
 ![example.com output](/output.png?raw=true "Screenshot")
+
+## Comparison
+
+I compared this with `dart:io` library's http client. I ran tests 5 times, repeatitively (same machine, same network, same site). The results are given below -
+
+```
+Round 1:
+Cronet implemenation took: 528 ms
+dart:io implemenation took: 649 ms
+
+Round 2:
+Cronet implemenation took: 617 ms
+dart:io implemenation took: 650 ms
+
+Round 3:
+Cronet implemenation took: 569 ms
+dart:io implemenation took: 677 ms
+
+Round 4:
+Cronet implemenation took: 559 ms
+dart:io implemenation took: 670 ms
+
+Round 5:
+Cronet implemenation took: 575 ms
+dart:io implemenation took: 673 ms
+```
+
+So, despite of the overhead of `dart:ffi` and the `wrapper` around it, even in this early stage, in such a small site, we can see cronet is faster. The differences **may** increase as we optimise some and test on a bigger load (& unstable network connection).
+
+### Compare Yourself
+
+```
+./benchmark.sh
+```

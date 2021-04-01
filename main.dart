@@ -17,7 +17,9 @@ void main(List<String> args) {
   ReceivePort _rp = ReceivePort();
 
   
-  
+
+  CallbackHandler cbh = CallbackHandler(_rp, _cronet);
+
   Pointer<Cronet_Engine> cronet_engine = _cronet.Cronet_Engine_Create();
   print('Running Cronet Version: ${_cronet.Cronet_Engine_GetVersionString(cronet_engine).cast<Utf8>().toDartString()}');
   Pointer<Cronet_EngineParams> engine_params = _cronet.Cronet_EngineParams_Create();
@@ -28,10 +30,10 @@ void main(List<String> args) {
   Pointer<Cronet_UrlRequest> request = _cronet.Cronet_UrlRequest_Create();
   Pointer<Cronet_UrlRequestParams> request_params = _cronet.Cronet_UrlRequestParams_Create();
   _cronet.Cronet_UrlRequestParams_http_method_set(request_params, "GET".toNativeUtf8().cast<Int8>());
-  print(_cronet.Cronet_UrlRequest_Init(request, cronet_engine, 'http://example.com'.toNativeUtf8().cast<Int8>(), request_params));
-  CallbackHandler cbh = CallbackHandler(_rp, _cronet); 
+  _cronet.Cronet_UrlRequest_Init(request, cronet_engine, 'http://example.com'.toNativeUtf8().cast<Int8>(), request_params); 
   _cronet.Cronet_UrlRequest_Start(request);
   cbh.listen();
+
 }
 
 
