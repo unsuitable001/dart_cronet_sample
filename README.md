@@ -14,7 +14,7 @@ Follow: https://www.chromium.org/developers/how-tos/get-the-code & https://chrom
 ### Compile the wrapper
 
 ```
-cd wrapper
+cd lib/src/wrapper
 ./build.sh
 ```
 
@@ -25,6 +25,7 @@ cd wrapper
 From the root of the repo, run
 
 ```
+cd example
 dart main.dart
 ```
 
