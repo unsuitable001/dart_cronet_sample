@@ -12,16 +12,16 @@ dependencies:
 ffigen:
   name: 'Cronet'
   description: 'Bindings to Cronet'
-  output: 'generated_bindings.dart'
+  output: 'lib/src/generated_bindings.dart'
   array-workaround: true
   headers:
     entry-points:
-      - 'wrapper/wrapper.h'
+      - 'lib/src/wrapper/wrapper.h'
     include-directives:
-      - 'wrapper/wrapper.h'
+      - 'lib/src/wrapper/wrapper.h'
       - 'dart_api.h'
       - 'dart_native_api.h'
       - 'dart_api_dl.h'
-      - 'wrapper_export.h'
+      - 'lib/src/wrapper/wrapper_export.h'
   compiler-opts:
     - '-I/usr/lib/dart/include/ -DDART_SHARED_LIB'

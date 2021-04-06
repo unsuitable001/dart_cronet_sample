@@ -66,5 +66,6 @@ So, despite of the overhead of `dart:ffi` and the `wrapper` around it, even in t
 ### Compare Yourself
 
 ```
+cd benchmark
 ./benchmark.sh
 ```
