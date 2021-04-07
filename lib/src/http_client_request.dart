@@ -1,10 +1,34 @@
+import 'dart:async';
+import 'dart:ffi';
+import 'dart:isolate';
 import 'dart:typed_data';
+
+import 'package:ffi/ffi.dart';
 
 import 'generated_bindings.dart';
 
-import 'dart:ffi';
-import 'package:ffi/ffi.dart';
-import 'dart:isolate';
+class HttpClientRequest {
+  final Uri _uri;
+  final String _method;
+  final Cronet _cronet;
+  final Pointer<Cronet_Engine> _cronet_engine;
+  final _CallbackHandler _cbh;
+
+  HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine): _cbh = _CallbackHandler(_cronet) {}
+
+  Future<Stream<List<int>>> close() {
+    return Future(() {
+      Pointer<Cronet_UrlRequest> request = _cronet.Cronet_UrlRequest_Create();
+      Pointer<Cronet_UrlRequestParams> request_params = _cronet.Cronet_UrlRequestParams_Create();
+      _cronet.Cronet_UrlRequestParams_http_method_set(request_params, _method.toNativeUtf8().cast<Int8>());
+      _cronet.Cronet_UrlRequest_Init(request, _cronet_engine, _uri.toString().toNativeUtf8().cast<Int8>(), request_params);
+      _cronet.Cronet_UrlRequest_Start(request);
+      _cbh.listen();
+      return _cbh.stream;
+    });
+  }
+
+}
 
 
 
@@ -22,16 +46,18 @@ class _CallbackRequestMessage {
 }
 
 
-class CallbackHandler {
-  final ReceivePort _receivePort;
+class _CallbackHandler {
+  final ReceivePort _receivePort = ReceivePort();
   final Cronet cronet;
 
-  final stopwatch =  Stopwatch()..start();  // for benchmarking perposes only
+  final _controller = StreamController<List<int>>();
 
-  CallbackHandler(this._receivePort, this.cronet) {
+  _CallbackHandler(this.cronet) {
     
     cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
   }
+
+  Stream<List<int>> get stream => _controller.stream;
 
   void listen() {
     _receivePort.listen((message) {
@@ -55,7 +81,9 @@ class CallbackHandler {
 
           print("Recieved: ${bytes_read}");
 
-          print("${cronet.Cronet_Buffer_GetData(buffer).cast<Utf8>().toDartString()}");
+          _controller.sink.add(cronet.Cronet_Buffer_GetData(buffer).cast<Uint8>().asTypedList(bytes_read));
+
+//          print("${cronet.Cronet_Buffer_GetData(buffer).cast<Utf8>().toDartString()}");
 
           cronet.Cronet_UrlRequest_Read(request, buffer);
 
@@ -64,8 +92,8 @@ class CallbackHandler {
         case 'OnFailed':
         case 'OnCanceled':
         case 'OnSucceeded': {
-          print("Cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms");
           _receivePort.close();
+          _controller.close();
         }
         break;
         default: {
