@@ -62,6 +62,32 @@ Cronet implemenation took: 575 ms
 dart:io implemenation took: 673 ms
 ```
 
+### AOT Compilation
+
+Though using AOT compilation reduced the execution time for both, this time `dart:io` based solution surpassed `cronet` based solution.
+
+```
+Round 1:
+Cronet implemenation took: 487 ms
+dart:io implemenation took: 479 ms
+
+Round 2:
+Cronet implemenation took: 500 ms
+dart:io implemenation took: 483 ms
+
+Round 3:
+Cronet implemenation took: 493 ms
+dart:io implemenation took: 482 ms
+
+Round 4:
+Cronet implemenation took: 497 ms
+dart:io implemenation took: 500 ms
+
+Round 5:
+Cronet implemenation took: 486 ms
+dart:io implemenation took: 462 ms
+```
+
 So, despite of the overhead of `dart:ffi` and the `wrapper` around it, even in this early stage, in such a small site, we can see cronet is faster. The differences **may** increase as we optimise some and test on a bigger load (& unstable network connection).
 
 ### Compare Yourself
