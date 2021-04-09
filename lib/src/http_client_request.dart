@@ -7,6 +7,14 @@ import 'package:ffi/ffi.dart';
 
 import 'generated_bindings.dart';
 
+typedef RedirectReceivedCallback = void Function(String newLocationUrl);
+typedef ResponseStartedCallback = void Function();
+typedef ReadDataCallback = void Function(List<int> data, int bytes_read, Function read);   // onReadComplete may confuse people
+typedef FailedCallabck = void Function();
+typedef CanceledCallabck = void Function();
+typedef SuccessCallabck = void Function();
+
+
 class HttpClientRequest {
   final Uri _uri;
   final String _method;
@@ -15,6 +23,17 @@ class HttpClientRequest {
   final _CallbackHandler _cbh;
 
   HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine): _cbh = _CallbackHandler(_cronet) {}
+
+  void registerCallbacks({RedirectReceivedCallback? onRedirectReceived,
+    ResponseStartedCallback? onResponseStarted,
+    ReadDataCallback? onReadData,
+    FailedCallabck? onFailed,
+    CanceledCallabck? onCanceled,
+    SuccessCallabck? onSuccess}) {
+      _cbh.registerCallbacks(onRedirectReceived, onResponseStarted, onReadData, onFailed, onCanceled, onSuccess);
+
+  }
+
 
   Future<Stream<List<int>>> close() {
     return Future(() {
@@ -52,12 +71,37 @@ class _CallbackHandler {
 
   final _controller = StreamController<List<int>>();
 
+
+  RedirectReceivedCallback? _onRedirectReceived = null;
+  ResponseStartedCallback? _onResponseStarted = null;
+  ReadDataCallback? _onReadData = null;
+  FailedCallabck? _onFailed = null;
+  CanceledCallabck? _onCanceled = null;
+  SuccessCallabck? _onSuccess = null;
+
   _CallbackHandler(this.cronet) {
     
     cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
   }
 
   Stream<List<int>> get stream => _controller.stream;
+
+  void registerCallbacks([RedirectReceivedCallback? onRedirectReceived,
+    ResponseStartedCallback? onResponseStarted,
+    ReadDataCallback? onReadData,
+    FailedCallabck? onFailed,
+    CanceledCallabck? onCanceled,
+    SuccessCallabck? onSuccess]) {
+      this._onRedirectReceived = onRedirectReceived;
+      this._onResponseStarted = onResponseStarted;
+      this._onReadData = onReadData;
+      if(_onReadData != null) {
+        _controller.close();
+      }
+      this._onFailed = onFailed;
+      this._onCanceled = onCanceled;
+      this._onSuccess = onSuccess;
+  }
 
   void listen() {
     _receivePort.listen((message) {
@@ -67,10 +111,16 @@ class _CallbackHandler {
       switch(reqMessage.method) {
         case 'OnRedirectReceived': {
           print("New Location: ${Pointer.fromAddress(args[0]).cast<Utf8>().toDartString()}");
+          if(_onRedirectReceived != null) {
+            _onRedirectReceived!(Pointer.fromAddress(args[0]).cast<Utf8>().toDartString());
+          }
         }
         break;
         case 'OnResponseStarted': {
           print("Response started");
+          if(_onResponseStarted != null) {
+            _onResponseStarted!();
+          }
         }
         break;
         case 'OnReadCompleted': {
@@ -81,19 +131,44 @@ class _CallbackHandler {
 
           print("Recieved: ${bytes_read}");
 
-          _controller.sink.add(cronet.Cronet_Buffer_GetData(buffer).cast<Uint8>().asTypedList(bytes_read));
-
-//          print("${cronet.Cronet_Buffer_GetData(buffer).cast<Utf8>().toDartString()}");
-
-          cronet.Cronet_UrlRequest_Read(request, buffer);
+          if(_onReadData != null) {
+            _onReadData!(cronet.Cronet_Buffer_GetData(buffer).cast<Uint8>().asTypedList(bytes_read),
+            bytes_read, () => cronet.Cronet_UrlRequest_Read(request, buffer));
+          } else {
+            _controller.sink.add(cronet.Cronet_Buffer_GetData(buffer).cast<Uint8>().asTypedList(bytes_read));
+            cronet.Cronet_UrlRequest_Read(request, buffer);
+          }  
 
         }
         break;
-        case 'OnFailed':
-        case 'OnCanceled':
+        case 'OnFailed': {
+          _receivePort.close();
+          if(_onFailed != null) {
+          _onFailed!();
+          }
+          if(_onReadData == null) {
+          _controller.close();
+          }
+        }
+        break;
+        case 'OnCanceled': {
+          _receivePort.close();
+          if(_onCanceled != null) {
+          _onCanceled!();
+          }
+          if(_onReadData == null) {
+          _controller.close();
+          }
+        }
+        break;
         case 'OnSucceeded': {
           _receivePort.close();
-          _controller.close();
+          if(_onSuccess != null) {
+            _onSuccess!();
+          }
+          if(_onReadData == null) {
+            _controller.close();
+          }
         }
         break;
         default: {
