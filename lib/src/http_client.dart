@@ -21,7 +21,7 @@ class HttpClient {
   
   Future<HttpClientRequest> openUrl(String method, Uri url) {
     return Future(() {
-      Pointer<Cronet_EngineParams> engine_params = _cronet.Cronet_EngineParams_Create();
+      final engine_params = _cronet.Cronet_EngineParams_Create();
       _cronet.Cronet_EngineParams_user_agent_set(engine_params, userAgent.toNativeUtf8().cast<Int8>());
       _cronet.Cronet_EngineParams_enable_quic_set(engine_params, quic);
       _cronet.Cronet_Engine_StartWithParams(_cronet_engine, engine_params);

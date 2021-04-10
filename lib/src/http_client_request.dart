@@ -22,7 +22,7 @@ class HttpClientRequest {
   final Pointer<Cronet_Engine> _cronet_engine;
   final _CallbackHandler _cbh;
 
-  HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine): _cbh = _CallbackHandler(_cronet) {}
+  HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine): _cbh = _CallbackHandler(_cronet);
 
   void registerCallbacks({RedirectReceivedCallback? onRedirectReceived,
     ResponseStartedCallback? onResponseStarted,
@@ -37,8 +37,8 @@ class HttpClientRequest {
 
   Future<Stream<List<int>>> close() {
     return Future(() {
-      Pointer<Cronet_UrlRequest> request = _cronet.Cronet_UrlRequest_Create();
-      Pointer<Cronet_UrlRequestParams> request_params = _cronet.Cronet_UrlRequestParams_Create();
+      final request = _cronet.Cronet_UrlRequest_Create();
+      final request_params = _cronet.Cronet_UrlRequestParams_Create();
       _cronet.Cronet_UrlRequestParams_http_method_set(request_params, _method.toNativeUtf8().cast<Int8>());
       _cronet.Cronet_UrlRequest_Init(request, _cronet_engine, _uri.toString().toNativeUtf8().cast<Int8>(), request_params);
       _cronet.Cronet_UrlRequest_Start(request);
@@ -55,12 +55,13 @@ class _CallbackRequestMessage {
   final String method;
   final Uint8List data;
 
-  factory _CallbackRequestMessage.fromCppMessage(List message) {
-    return _CallbackRequestMessage._(message[0], message[1]);
+  factory _CallbackRequestMessage.fromCppMessage(List<dynamic> message) {
+    return _CallbackRequestMessage._(message[0] as String, message[1] as Uint8List);
   }
 
   _CallbackRequestMessage._(this.method, this.data);
 
+  @override
   String toString() => 'CppRequest(method: $method)';
 }
 
@@ -72,12 +73,12 @@ class _CallbackHandler {
   final _controller = StreamController<List<int>>();
 
 
-  RedirectReceivedCallback? _onRedirectReceived = null;
-  ResponseStartedCallback? _onResponseStarted = null;
-  ReadDataCallback? _onReadData = null;
-  FailedCallabck? _onFailed = null;
-  CanceledCallabck? _onCanceled = null;
-  SuccessCallabck? _onSuccess = null;
+  RedirectReceivedCallback? _onRedirectReceived;
+  ResponseStartedCallback? _onResponseStarted;
+  ReadDataCallback? _onReadData;
+  FailedCallabck? _onFailed;
+  CanceledCallabck? _onCanceled;
+  SuccessCallabck? _onSuccess;
 
   _CallbackHandler(this.cronet) {
     
@@ -92,44 +93,44 @@ class _CallbackHandler {
     FailedCallabck? onFailed,
     CanceledCallabck? onCanceled,
     SuccessCallabck? onSuccess]) {
-      this._onRedirectReceived = onRedirectReceived;
-      this._onResponseStarted = onResponseStarted;
-      this._onReadData = onReadData;
+      _onRedirectReceived = onRedirectReceived;
+      _onResponseStarted = onResponseStarted;
+      _onReadData = onReadData;
       if(_onReadData != null) {
         _controller.close();
       }
-      this._onFailed = onFailed;
-      this._onCanceled = onCanceled;
-      this._onSuccess = onSuccess;
+      _onFailed = onFailed;
+      _onCanceled = onCanceled;
+      _onSuccess = onSuccess;
   }
 
   void listen() {
-    _receivePort.listen((message) {
-      final reqMessage = _CallbackRequestMessage.fromCppMessage(message);
+    _receivePort.listen((dynamic message) {
+      final reqMessage = _CallbackRequestMessage.fromCppMessage(message as List);
       Int64List args;
       args = reqMessage.data.buffer.asInt64List();
       switch(reqMessage.method) {
         case 'OnRedirectReceived': {
-          print("New Location: ${Pointer.fromAddress(args[0]).cast<Utf8>().toDartString()}");
+          print('New Location: ${Pointer.fromAddress(args[0]).cast<Utf8>().toDartString()}');
           if(_onRedirectReceived != null) {
             _onRedirectReceived!(Pointer.fromAddress(args[0]).cast<Utf8>().toDartString());
           }
         }
         break;
         case 'OnResponseStarted': {
-          print("Response started");
+          print('Response started');
           if(_onResponseStarted != null) {
             _onResponseStarted!();
           }
         }
         break;
         case 'OnReadCompleted': {
-          Pointer<Cronet_UrlRequest> request = Pointer.fromAddress(args[0]);
-          Pointer<Cronet_UrlResponseInfo> info = Pointer.fromAddress(args[1]);
-          Pointer<Cronet_Buffer> buffer = Pointer.fromAddress(args[2]);
-          int bytes_read = args[3];
+          final request = Pointer<Cronet_UrlRequest>.fromAddress(args[0]);
+          final _ = Pointer<Cronet_UrlResponseInfo>.fromAddress(args[1]);
+          final buffer = Pointer<Cronet_Buffer>.fromAddress(args[2]);
+          final bytes_read = args[3];
 
-          print("Recieved: ${bytes_read}");
+          print('Recieved: $bytes_read');
 
           if(_onReadData != null) {
             _onReadData!(cronet.Cronet_Buffer_GetData(buffer).cast<Uint8>().asTypedList(bytes_read),
@@ -172,10 +173,12 @@ class _CallbackHandler {
         }
         break;
         default: {
-          throw("Unimplemented Callback");
+          throw('Unimplemented Callback');
         }
       }
 
-    }).onError((error) => print(error));
+    }, onError: (Object error) {
+      print(error);
+    });
   }
 }

@@ -10,7 +10,7 @@ import 'package:cronet_sample/cronet_sample.dart';
 void main(List<String> args) {
   final stopwatch =  Stopwatch()..start();
 
-  HttpClient client = HttpClient();
+  final client = HttpClient();
   client.getUrl(Uri.parse('http://info.cern.ch/')).then((HttpClientRequest request) {
     /* The alternate API introduced.
     NOTE: If we register callbacks & listen to the stream at the same time,
@@ -24,7 +24,7 @@ void main(List<String> args) {
   }).then((Stream<List<int>> response) {
     response.transform(utf8.decoder).listen((contents) {
       print(contents);
-    }, onDone: () => print("cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms"));
+    }, onDone: () => print('cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms'));
   });
 
 }

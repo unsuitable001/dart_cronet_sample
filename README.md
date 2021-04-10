@@ -38,57 +38,31 @@ You'll get the HTML page of `example.com` along with some other texts (I used th
 
 ## Comparison
 
-I compared this with `dart:io` library's http client. I ran tests 5 times, repeatitively (same machine, same network, same site). The results are given below -
+I compared this with `dart:io` library's http client. I ran tests 5 times, repeatitively (same machine, same network, same site - http://info.cern.ch/). The results are given below -
 
 ```
 Round 1:
-Cronet implemenation took: 528 ms
-dart:io implemenation took: 649 ms
+cronet implemenation took: 385 ms
+dart:io implemenation took: 351 ms
 
 Round 2:
-Cronet implemenation took: 617 ms
-dart:io implemenation took: 650 ms
+cronet implemenation took: 382 ms
+dart:io implemenation took: 345 ms
 
 Round 3:
-Cronet implemenation took: 569 ms
-dart:io implemenation took: 677 ms
+cronet implemenation took: 378 ms
+dart:io implemenation took: 349 ms
 
 Round 4:
-Cronet implemenation took: 559 ms
-dart:io implemenation took: 670 ms
+cronet implemenation took: 385 ms
+dart:io implemenation took: 363 ms
 
 Round 5:
-Cronet implemenation took: 575 ms
-dart:io implemenation took: 673 ms
+cronet implemenation took: 385 ms
+dart:io implemenation took: 359 ms
 ```
 
-### AOT Compilation
-
-Though using AOT compilation reduced the execution time for both, this time `dart:io` based solution surpassed `cronet` based solution.
-
-```
-Round 1:
-Cronet implemenation took: 487 ms
-dart:io implemenation took: 479 ms
-
-Round 2:
-Cronet implemenation took: 500 ms
-dart:io implemenation took: 483 ms
-
-Round 3:
-Cronet implemenation took: 493 ms
-dart:io implemenation took: 482 ms
-
-Round 4:
-Cronet implemenation took: 497 ms
-dart:io implemenation took: 500 ms
-
-Round 5:
-Cronet implemenation took: 486 ms
-dart:io implemenation took: 462 ms
-```
-
-So, despite of the overhead of `dart:ffi` and the `wrapper` around it, even in this early stage, in such a small site, we can see cronet is faster. The differences **may** increase as we optimise some and test on a bigger load (& unstable network connection).
+Well, now `cronet` based solution is marginally slower than `dart:io`. Making the API similar to `dart:io` surely added some overhead, like - receiving message from C side and then forwarding that data to another stream.
 
 ### Compare Yourself
 
