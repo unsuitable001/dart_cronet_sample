@@ -6,29 +6,21 @@ Ported from: https://chromium.googlesource.com/chromium/src/+/master/components/
 
 [![Build Status](https://github.com/unsuitable001/dart_cronet_sample/workflows/Dart%20CI/badge.svg)](https://github.com/unsuitable001/dart_cronet_sample/actions?query=workflow%3A"Dart+CI")
 
+Checkout the Flutter version with Android support: https://github.com/unsuitable001/flutter_cronet_sample
+
 ## Build Guide
 
 Make sure you have `libcronet.so` file in path.
 
 Follow: https://www.chromium.org/developers/how-tos/get-the-code & https://chromium.googlesource.com/chromium/src/+/master/components/cronet/build_instructions.md for cronet's build instruction.
 
-
-### Compile the wrapper
-
-```
-cd lib/src/wrapper
-./build.sh
-```
-
-*Pre-compiled .so file is included in the repo. Build on 64-bit linux machine with Dart SDK 2.12*
-
-## Usage Instruction
+## Run Example
 
 From the root of the repo, run
 
 ```
-cd example
-dart main.dart
+dart run
+dart example/main.dart
 ```
 
 ### Output
@@ -68,7 +60,8 @@ Well, now `cronet` based solution is marginally slower than `dart:io`. Making th
 
 ### Compare Yourself
 
+*Run from root of the project*
+
 ```
-cd benchmark
-./benchmark.sh
+./benchmark/benchmark.sh 
 ```

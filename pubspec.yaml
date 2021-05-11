@@ -7,6 +7,7 @@ environment:
 
 dependencies:
   ffi: ^1.0.0
+  path: any
 
 dev_dependencies:
   pedantic: ^1.10.0
@@ -19,12 +20,12 @@ ffigen:
   array-workaround: true
   headers:
     entry-points:
-      - 'lib/src/wrapper/wrapper.h'
+      - 'bin/common/wrapper/wrapper.h'
     include-directives:
-      - 'lib/src/wrapper/wrapper.h'
+      - 'bin/common/wrapper/wrapper.h'
       - 'dart_api.h'
       - 'dart_native_api.h'
       - 'dart_api_dl.h'
-      - 'lib/src/wrapper/wrapper_export.h'
+      - 'bin/common/wrapper/wrapper_export.h'
   compiler-opts:
     - '-I/usr/lib/dart/include/ -DDART_SHARED_LIB'

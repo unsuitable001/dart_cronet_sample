@@ -9,7 +9,7 @@ import 'http_client_request.dart';
 
 final _cronet = Platform.isAndroid
     ? Cronet(DynamicLibrary.open('libwrapper.so'))
-    : Cronet(DynamicLibrary.open('../lib/src/wrapper/wrapper.so'));
+    : Cronet(DynamicLibrary.open('./wrapper.so'));
 
 class HttpClient {
   String userAgent = 'Dart/2.12';
