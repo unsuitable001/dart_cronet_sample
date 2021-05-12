@@ -8,9 +8,26 @@ Ported from: https://chromium.googlesource.com/chromium/src/+/master/components/
 
 Checkout the Flutter version with Android support: https://github.com/unsuitable001/flutter_cronet_sample
 
-## Build Guide
+## Usage
 
-Make sure you have `libcronet.so` file in path.
+*Make sure you have `libcronet.so` file in path.*
+
+1. Add this to `pubspec.yaml`
+
+```
+dependencies:
+  cronet_sample:
+    git: https://github.com/unsuitable001/dart_cronet_sample.git
+```
+
+2. Run this from the root of your project
+
+```
+pub get
+pub run cronet_sample
+```
+
+## Build Guide
 
 Follow: https://www.chromium.org/developers/how-tos/get-the-code & https://chromium.googlesource.com/chromium/src/+/master/components/cronet/build_instructions.md for cronet's build instruction.
 
