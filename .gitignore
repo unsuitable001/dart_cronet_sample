@@ -25,6 +25,9 @@ doc/api/
 *.js.deps
 *.js.map
 
+# Cronet pre-built binaries
+cronet_binaries/
+
 # Generated shared libraries.
 *.so
 *.so.*

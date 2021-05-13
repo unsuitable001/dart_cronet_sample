@@ -10,8 +10,6 @@ Checkout the Flutter version with Android support: https://github.com/unsuitable
 
 ## Usage
 
-*Make sure you have `libcronet.so` file in path.*
-
 1. Add this to `pubspec.yaml`
 
 ```
@@ -20,16 +18,35 @@ dependencies:
     git: https://github.com/unsuitable001/dart_cronet_sample.git
 ```
 
-2. Run this from the root of your project
+2. Run this from the `root` of your project
 
 ```
 pub get
 pub run cronet_sample
 ```
 
+**Internet connection is required to download cronet binaries**
+
+
 ## Build Guide
 
-Follow: https://www.chromium.org/developers/how-tos/get-the-code & https://chromium.googlesource.com/chromium/src/+/master/components/cronet/build_instructions.md for cronet's build instruction.
+Want to build your own?
+
+For building cronet: https://www.chromium.org/developers/how-tos/get-the-code & https://chromium.googlesource.com/chromium/src/+/master/components/cronet/build_instructions.md
+
+For building wrapper:
+
+From this repository root
+
+```
+cd lib/src/native/wrapper
+./build.sh .
+```
+
+Copy the `wrapper` binary to your project's `root` folder. 
+Copy the cronet's binary to the `cronet_binaries/<platform><arch>` folder from project's `root` folder.
+
+*If you are in 64bit linux system, `cronet_binaries/<platform><arch>` will be `cronet_binaries/linux64`.*
 
 ## Run Example
 

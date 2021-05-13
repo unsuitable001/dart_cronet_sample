@@ -21,7 +21,7 @@ void *handle = dlopen("libcronet.91.0.4456.0.so", RTLD_NOW);
 Dart_Port _callback_port;
 SampleExecutor executor;
 void destroy() {
-    dlclose(handle);
+  dlclose(handle);
 }
 
 static void FreeFinalizer(void*, void* value) {
@@ -32,11 +32,10 @@ static void FreeFinalizer(void*, void* value) {
 /* Callback Helpers */
 
 void registerCallbackHandler(Dart_Port send_port) {_callback_port = send_port;}
-void dispatchCallback(char* methodname, Dart_CObject args) {
-
+void dispatchCallback(const char* methodname, Dart_CObject args) {
   Dart_CObject c_method_name;
   c_method_name.type = Dart_CObject_kString;
-  c_method_name.value.as_string = methodname;
+  c_method_name.value.as_string = const_cast<char *>(methodname);
 
   Dart_CObject* c_request_arr[] = {&c_method_name, &args};
   Dart_CObject c_request;

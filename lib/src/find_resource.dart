@@ -43,3 +43,8 @@ String wrapperSourcePath() {
   }
   return wrapperSource.toFilePath();
 }
+
+bool isCronetAvailable(String platform) {
+  final cronetDir = Directory.current.uri.resolve('cronet_binaries/$platform/');
+  return Directory.fromUri(cronetDir).existsSync();
+}

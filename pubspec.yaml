@@ -28,4 +28,4 @@ ffigen:
       - 'dart_api_dl.h'
       - 'lib/src/native/wrapper/wrapper_export.h'
   compiler-opts:
-    - '-I/usr/lib/dart/include/ -DDART_SHARED_LIB'
+    - '-Ilib/src/native/include/ -DDART_SHARED_LIB'
