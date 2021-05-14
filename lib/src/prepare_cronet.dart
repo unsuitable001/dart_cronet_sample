@@ -11,6 +11,8 @@ final _cBinExtMap = {
   'linux64': '.tar.xz',
 };
 
+/// Builds the [wrapper] shared library
+/// according to [build.sh] file
 void buildWrapper() {
   final wrapperPath = wrapperSourcePath();
 
@@ -24,6 +26,8 @@ void buildWrapper() {
   print(result.stderr);
 }
 
+/// Download [cronet] library
+/// from Github Releases
 void downloadCronetBinaries(List<String> platforms) {
   platforms.forEach((platform) async {
     if (!isCronetAvailable(platform)) {
