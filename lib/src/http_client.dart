@@ -4,12 +4,11 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
+import 'dylib_handler.dart';
 import 'generated_bindings.dart';
 import 'http_client_request.dart';
 
-final _cronet = Platform.isAndroid
-    ? Cronet(DynamicLibrary.open('libwrapper.so'))
-    : Cronet(DynamicLibrary.open('./wrapper.so'));
+final _cronet = Cronet(loadWrapper());
 
 class HttpClient {
   String userAgent = 'Dart/2.12';
