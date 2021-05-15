@@ -1,4 +1,4 @@
-
+// This is same as cronet's header file except a few changes here and there.
 #ifndef WRAPPER_H_
 #define WRAPPER_H_
 

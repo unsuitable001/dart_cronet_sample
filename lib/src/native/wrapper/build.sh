@@ -1,3 +1,4 @@
+# Takes the path to wrapper source code as parameter
 if [ $# -eq 0 ]
   then
     echo "No arguments supplied"
