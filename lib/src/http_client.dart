@@ -14,9 +14,25 @@ final _cronet = Cronet(loadWrapper());
 /// A client that receives content, such as web pages,
 /// from a server using the HTTP, HTTPS, HTTP2, Quic etc. protocol.
 ///
-/// HttpClient contains a number of methods to send an HttpClientRequest to an
-/// Http server and receive an HttpClientResponse back. For example, you can use the
-/// get, [getUrl], post, and postUrl methods for [GET] and POST requests, respectively.
+/// HttpClient contains a number of methods to send an [HttpClientRequest] to an
+/// Http server and receive an [Stream] of [List] of [int], analogus to [HttpClientResponse] back.
+/// Alternatively, you can also register callbacks for different network events including
+/// but not limited to receiving the raw bytes sent by the server.
+/// For example, you can use the
+/// get, [getUrl], post, and postUrl methods for GET and POST requests, respectively.
+///
+///
+/// TODO: Implement other functions
+/// 
+/// 
+/// Example Usage:
+/// ```dart
+/// final client = HttpClient();
+/// client.getUrl(Uri.parse('https://example.com/'))
+///   .then((HttpClientRequest request) {
+///   // See [HttpClientRequest] for more info
+/// });
+/// ```
 class HttpClient {
   String userAgent = 'Dart/2.12';
   final Pointer<Cronet_Engine> _cronet_engine;
@@ -25,13 +41,14 @@ class HttpClient {
   /// Initiates a [HttpClient].
   ///
   /// An optional parameter [quic] can be provided to
-  /// use QUIC protocol or not.
+  /// use QUIC protocol.
   HttpClient({this.quic = true})
       : _cronet_engine = _cronet.Cronet_Engine_Create() {
+    // Initialize Dart Native API dynamically
     _cronet.InitDartApiDL(NativeApi.initializeApiDLData);
   }
 
-  /// Opens a [url] using a [method] like [GET]
+  /// Opens a [url] using a [method] like GET
   ///
   /// Returns a [Future] of [HttpClientRequest].
   Future<HttpClientRequest> openUrl(String method, Uri url) {
@@ -55,7 +72,7 @@ class HttpClient {
     throw UnimplementedError();
   }
 
-  /// Opens a [url] using [GET] method.
+  /// Opens a [url] using GET method.
   ///
   /// Returns a [Future] of [HttpClientRequest].
   Future<HttpClientRequest> getUrl(Uri url) {

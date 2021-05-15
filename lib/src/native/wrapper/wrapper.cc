@@ -7,6 +7,11 @@
 #include <iostream>
 #include <stdarg.h>
 
+#define CRONET_VERSION "91.0.4456.0"
+#define CRONET_LIB_PREFIX "libcronet."  // NOTE: extra . (dot) is also a part of the prefix
+#define CRONET_LIB_EXTENSION ".so"
+
+#define CRONET_LIB_NAME CRONET_LIB_PREFIX CRONET_VERSION CRONET_LIB_EXTENSION
 ////////////////////////////////////////////////////////////////////////////////
 // Initialize `dart_api_dl.h`
 intptr_t InitDartApiDL(void* data) {
@@ -17,7 +22,7 @@ intptr_t InitDartApiDL(void* data) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // loading cronet
-void *handle = dlopen("libcronet.91.0.4456.0.so", RTLD_NOW);
+void *handle = dlopen(CRONET_LIB_NAME, RTLD_NOW);
 Dart_Port _callback_port;
 SampleExecutor executor;
 void destroy() {
@@ -31,7 +36,18 @@ static void FreeFinalizer(void*, void* value) {
 
 /* Callback Helpers */
 
+// Registers the Dart side's
+// ReceievePort's NativePort component
+//
+// This is required to send the data
 void registerCallbackHandler(Dart_Port send_port) {_callback_port = send_port;}
+
+// This sends the callback name and the associated data
+// with it to the Dart side via NativePort
+//
+// Sent data is broken into 2 parts.
+// message[0] is the method name, which is a string
+// message[1] contains all the data to pass to that method
 void dispatchCallback(const char* methodname, Dart_CObject args) {
   Dart_CObject c_method_name;
   c_method_name.type = Dart_CObject_kString;
@@ -48,6 +64,12 @@ void dispatchCallback(const char* methodname, Dart_CObject args) {
   Dart_PostCObject_DL(_callback_port, &c_request);
 }
 
+// Builds the arguments to pass to the Dart side
+// as a parameter to the callbacks
+// Data processed here are
+// consumed as from message[1] if
+// message is the name of the data
+// receieved by the ReceievePort
 Dart_CObject callbackArgBuilder(int num, ...) {
   Dart_CObject c_request_data;
   va_list valist;
@@ -204,11 +226,21 @@ void OnCanceled(
 
 Cronet_EnginePtr Cronet_Engine_Create() {
   printf("Cronet_Engine_Create");
-  if(!handle) {
-    std::cout << dlerror();
+  // Checks if cronet is loaded properly
+  // As this is the first function to call,
+  // if this succeeds, every subsequent use
+  // of cronet [handle] should.
+  if (!handle) {
+    fprintf(stderr, "%s\n", dlerror());
+    exit(EXIT_FAILURE);
   }
   return _Cronet_Engine_Create();
 }
+
+// Mapping Cronet Function -> Wrapper function
+// Most of them are unchanged, except some.
+// Note: Can someone suggest a better way to
+// map unchanged APIs?
 Cronet_String Cronet_Engine_GetVersionString(Cronet_EnginePtr ce) {return _Cronet_Engine_GetVersionString(ce);}
 Cronet_EngineParamsPtr Cronet_EngineParams_Create(void) {return _Cronet_EngineParams_Create();}
 void Cronet_EngineParams_Destroy(Cronet_EngineParamsPtr self) {}

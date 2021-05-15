@@ -21,9 +21,25 @@ typedef SuccessCallabck = void Function();
 /// It handles all of the Http Requests made by [HttpClient].
 ///
 /// Provides two ways to get data from the request.
-/// [registerCallbacks] or a [Stream] of [List] of [int] like [dart:io HttpClientResponse].
+/// [registerCallbacks] or a [Stream] of [List] of [int] like [HttpClientResponse].
 ///
 /// Either of them can be used at a time.
+/// 
+/// 
+/// Example Usage:
+/// ```dart
+/// final client = HttpClient();
+/// client.getUrl(Uri.parse('https://example.com/'))
+///   .then((HttpClientRequest request) {
+///   return request.close();
+/// }).then((Stream<List<int>> response) {
+///   // Here you got the raw data.
+///   // Use it as you like.
+/// });
+/// ```
+/// 
+/// 
+/// TODO: Implement other functions
 class HttpClientRequest {
   final Uri _uri;
   final String _method;
@@ -58,7 +74,7 @@ class HttpClientRequest {
   /// emitting data received from the server
   /// by cronet.
   ///
-  /// Consumeable similar to [HttpClientResponse]
+  /// Consumable similar to [HttpClientResponse]
   Future<Stream<List<int>>> close() {
     return Future(() {
       final request = _cronet.Cronet_UrlRequest_Create();
@@ -102,7 +118,7 @@ class _CallbackHandler {
   final Cronet cronet;
 
   /// Stream controller to allow consumption of data
-  /// like [dart:io HttpClientResponse]
+  /// like [HttpClientResponse]
   final _controller = StreamController<List<int>>();
 
   RedirectReceivedCallback? _onRedirectReceived;
