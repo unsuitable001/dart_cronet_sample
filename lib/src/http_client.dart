@@ -23,8 +23,8 @@ final _cronet = Cronet(loadWrapper());
 ///
 ///
 /// TODO: Implement other functions
-/// 
-/// 
+///
+///
 /// Example Usage:
 /// ```dart
 /// final client = HttpClient();

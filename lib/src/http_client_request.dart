@@ -24,8 +24,8 @@ typedef SuccessCallabck = void Function();
 /// [registerCallbacks] or a [Stream] of [List] of [int] like [HttpClientResponse].
 ///
 /// Either of them can be used at a time.
-/// 
-/// 
+///
+///
 /// Example Usage:
 /// ```dart
 /// final client = HttpClient();
@@ -37,8 +37,8 @@ typedef SuccessCallabck = void Function();
 ///   // Use it as you like.
 /// });
 /// ```
-/// 
-/// 
+///
+///
 /// TODO: Implement other functions
 class HttpClientRequest {
   final Uri _uri;

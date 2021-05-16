@@ -4,6 +4,9 @@ analyzer:
   strong-mode:
     implicit-casts: false
     implicit-dynamic: false
+  exclude:
+    - example/**
+    - lib/cronet_sample.dart # due to method channel
 
 linter:
   rules:

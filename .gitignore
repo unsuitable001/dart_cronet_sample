@@ -37,6 +37,14 @@ cronet_binaries/
 # AOT compiled files.
 *.exe
 
+*.jar
+*.cxx
+
+*.flutter-plugins
+*.flutter-plugins-dependencies
+
+*.idea
+
 # Directory for quick experiments.
 experiments/
 

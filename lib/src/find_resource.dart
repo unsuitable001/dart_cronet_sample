@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'dart:io' show File, Directory;
 
 /// Finds the root [Uri] of our package
-Uri? _findPackageRoot() {
+Uri? findPackageRoot() {
   var root = Directory.current.uri;
   do {
     // Traverse up till .dart_tool/package_config.json is found
@@ -38,7 +38,7 @@ Uri? _findPackageRoot() {
 /// Throws [Exception] if not found
 String wrapperSourcePath() {
   // Finds this package's location
-  final packagePath = _findPackageRoot();
+  final packagePath = findPackageRoot();
   if (packagePath == null) {
     throw Exception('Cannot resolve package:cronet_sample\'s rootUri');
   }
