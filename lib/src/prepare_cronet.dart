@@ -1,6 +1,8 @@
 // Contains the nessesary setup code only. Not meant to be exposed.
 
-import 'dart:io' show Process, ProcessStartMode;
+import 'dart:io' show Directory, File, Process, ProcessStartMode;
+
+import 'package:path/path.dart';
 
 import 'find_resource.dart';
 
@@ -27,6 +29,44 @@ void buildWrapper() {
   print(result.stderr);
 }
 
+/// Move binary files for mobiles. Currenly just [Android] is implemented
+void moveMobileBinaries(String platform) {
+  if (platform.startsWith('android')) {
+    final android = findPackageRoot()!.toFilePath() + 'android';
+
+    Directory(android + '/libs').createSync();
+
+    Directory('cronet_binaries/' + platform + '/libs')
+        .listSync()
+        .forEach((jar) {
+      if (jar is File) {
+        jar.renameSync(android + '/libs/' + basename(jar.path));
+      }
+    }); // move the extracted jars
+
+    Directory(android + '/src/main/jniLibs').createSync();
+
+    Directory(
+            'cronet_binaries/' + platform + '/' + platform.split('android')[1])
+        .listSync()
+        .forEach((cronet) {
+      if (cronet is File) {
+        Directory(android + '/src/main/jniLibs/' + platform.split('android')[1])
+            .createSync();
+
+        if (cronet is File) {
+          cronet.renameSync(android +
+              '/src/main/jniLibs/' +
+              platform.split('android')[1] +
+              '/' +
+              basename(cronet.path));
+        }
+      }
+    }); // move cronet binaries
+    Directory('cronet_binaries/$platform').deleteSync(recursive: true);
+  }
+}
+
 /// Download [cronet] library
 /// from Github Releases
 Future<void> downloadCronetBinaries(String platform) async {
@@ -41,7 +81,12 @@ Future<void> downloadCronetBinaries(String platform) async {
       throw Exception('Can\'t download. Check your network connection!');
     }
     print('Extracting Cronet for $platform');
-    Process.runSync('mkdir', ['-p', 'cronet_binaries']);
+
+    // Process.runSync('mkdir', ['-p', 'cronet_binaries']);
+    Directory('cronet_binaries').createSync();
+
+    // Do we have tar extraction capability
+    // in dart's built-in libraries?
     final res =
         Process.runSync('tar', ['-xvf', fileName, '-C', 'cronet_binaries']);
     if (res.exitCode != 0) {
@@ -49,35 +94,14 @@ Future<void> downloadCronetBinaries(String platform) async {
           'Can\'t unzip. Check if the downloaded file isn\'t corrupted');
     }
     print('Done! Cleaning up...');
-    Process.runSync('rm', ['-f', fileName]);
+
+    File(fileName).deleteSync();
     if (platform.startsWith('android')) {
       print(platform);
-      copyMobileBinaries(platform);
+      moveMobileBinaries(platform);
     }
     print('Done! Cronet support for $platform is now available!');
   } else {
     print('Cronet $platform is already available. No need to download.');
-  }
-}
-
-void copyMobileBinaries(String platform) {
-  if (platform.startsWith('android')) {
-    final android = findPackageRoot()!.toFilePath() + 'android';
-
-    Process.runSync('mkdir', ['-p', android + '/libs']);
-    print('Copying to ' + android + '/libs');
-    Process.runSync('cp', [
-      '-R',
-      'cronet_binaries/' + platform + '/libs',
-      android
-    ]); // copy jar files
-
-    Process.runSync('mkdir', ['-p', android + '/src/main/jniLibs']);
-    Process.runSync('cp', [
-      '-R',
-      'cronet_binaries/' + platform + '/' + platform.split('android')[1],
-      android + '/src/main/jniLibs'
-    ]); // copy cronet
-
   }
 }
