@@ -25,12 +25,22 @@ dependencies:
 
 2. Run this from the `root` of your project
 
+Desktop Platforms
+
+```bash
+pub get
+pub run cronet_sample <platform>
+```
+Supported platforms: `linux64`
+
+
+Mobile Platforms (Flutter)
+
 ```bash
 flutter pub get
-flutter pub run cronet_sample <platform>
 ```
-
-Two platforms are currently supported. `linux64` and `androidarm64-v8a`
+Binaries aren't checked into git. They will be published on pub though. Meanwhile,
+they can be downloaded from `Releases` section.
 
 3. Import
 
@@ -94,4 +104,11 @@ From the root of the repo, run
 ```bash
 cd example
 flutter run
+```
+
+or
+
+```bash
+cd example_dart
+dart run
 ```

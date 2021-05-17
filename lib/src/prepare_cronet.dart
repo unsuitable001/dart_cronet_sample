@@ -2,7 +2,7 @@
 
 import 'dart:io' show Directory, File, Process, ProcessStartMode;
 
-import 'package:path/path.dart';
+// import 'package:path/path.dart';
 
 import 'find_resource.dart';
 
@@ -11,7 +11,7 @@ final _cronetBinaryUrl =
     'https://github.com/unsuitable001/dart_cronet_sample/releases/download/$_release/';
 final _cBinExtMap = {
   'linux64': '.tar.xz',
-  'androidarm64-v8a': '.tar.xz',
+  // 'androidarm64-v8a': '.tar.xz',
 };
 
 /// Builds the [wrapper] shared library
@@ -29,43 +29,45 @@ void buildWrapper() {
   print(result.stderr);
 }
 
+// Disabled - files included via .pubignore
+
 /// Move binary files for mobiles. Currenly just [Android] is implemented
-void moveMobileBinaries(String platform) {
-  if (platform.startsWith('android')) {
-    final android = findPackageRoot()!.toFilePath() + 'android';
+// void moveMobileBinaries(String platform) {
+//   if (platform.startsWith('android')) {
+//     final android = findPackageRoot()!.toFilePath() + 'android';
 
-    Directory(android + '/libs').createSync();
+//     Directory(android + '/libs').createSync();
 
-    Directory('cronet_binaries/' + platform + '/libs')
-        .listSync()
-        .forEach((jar) {
-      if (jar is File) {
-        jar.renameSync(android + '/libs/' + basename(jar.path));
-      }
-    }); // move the extracted jars
+//     Directory('cronet_binaries/' + platform + '/libs')
+//         .listSync()
+//         .forEach((jar) {
+//       if (jar is File) {
+//         jar.renameSync(android + '/libs/' + basename(jar.path));
+//       }
+//     }); // move the extracted jars
 
-    Directory(android + '/src/main/jniLibs').createSync();
+//     Directory(android + '/src/main/jniLibs').createSync();
 
-    Directory(
-            'cronet_binaries/' + platform + '/' + platform.split('android')[1])
-        .listSync()
-        .forEach((cronet) {
-      if (cronet is File) {
-        Directory(android + '/src/main/jniLibs/' + platform.split('android')[1])
-            .createSync();
+//     Directory(
+//             'cronet_binaries/' + platform + '/' + platform.split('android')[1])
+//         .listSync()
+//         .forEach((cronet) {
+//       if (cronet is File) {
+//         Directory(android + '/src/main/jniLibs/' + platform.split('android')[1])
+//             .createSync();
 
-        if (cronet is File) {
-          cronet.renameSync(android +
-              '/src/main/jniLibs/' +
-              platform.split('android')[1] +
-              '/' +
-              basename(cronet.path));
-        }
-      }
-    }); // move cronet binaries
-    Directory('cronet_binaries/$platform').deleteSync(recursive: true);
-  }
-}
+//         if (cronet is File) {
+//           cronet.renameSync(android +
+//               '/src/main/jniLibs/' +
+//               platform.split('android')[1] +
+//               '/' +
+//               basename(cronet.path));
+//         }
+//       }
+//     }); // move cronet binaries
+//     Directory('cronet_binaries/$platform').deleteSync(recursive: true);
+//   }
+// }
 
 /// Download [cronet] library
 /// from Github Releases
@@ -96,10 +98,10 @@ Future<void> downloadCronetBinaries(String platform) async {
     print('Done! Cleaning up...');
 
     File(fileName).deleteSync();
-    if (platform.startsWith('android')) {
-      print(platform);
-      moveMobileBinaries(platform);
-    }
+    // if (platform.startsWith('android')) {
+    //   print(platform);
+    //   moveMobileBinaries(platform);
+    // }
     print('Done! Cronet support for $platform is now available!');
   } else {
     print('Cronet $platform is already available. No need to download.');
