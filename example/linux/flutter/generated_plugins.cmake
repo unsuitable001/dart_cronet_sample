@@ -3,7 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  cronet_sample
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

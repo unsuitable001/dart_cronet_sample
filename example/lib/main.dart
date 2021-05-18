@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -22,9 +23,8 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    request();
-    request(); // SEE issue #8
     super.initState();
+    request();
   }
 
   void request() {
@@ -55,6 +55,11 @@ class _MyAppState extends State<MyApp> {
         setState(() {
           _fetching = false;
         });
+      }, onError: (e) {
+        if (Platform.isLinux) {
+          print('See issue #8');
+          request();
+        }
       });
     });
   }

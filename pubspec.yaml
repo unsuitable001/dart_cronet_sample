@@ -34,8 +34,8 @@ flutter:
       android:
         package: com.example.cronet_sample
         pluginClass: CronetSamplePlugin
-      linux:
-        pluginClass: CronetSamplePlugin
+      # linux:
+      #   pluginClass: CronetSamplePlugin
 
 
 ffigen:
