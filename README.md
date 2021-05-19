@@ -19,7 +19,6 @@ dependencies:
   cronet_sample:
     git:
       url: https://github.com/unsuitable001/dart_cronet_sample.git
-      ref: feature_flutter
 
 ```
 
