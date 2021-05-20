@@ -7,11 +7,16 @@
 #include <iostream>
 #include <stdarg.h>
 
-#define CRONET_VERSION "91.0.4456.0"
-#define CRONET_LIB_PREFIX "libcronet."  // NOTE: extra . (dot) is also a part of the prefix
+#define CRONET_LIB_PREFIX "libcronet"
 #define CRONET_LIB_EXTENSION ".so"
 
-#define CRONET_LIB_NAME CRONET_LIB_PREFIX CRONET_VERSION CRONET_LIB_EXTENSION
+// Set CRONET_VERSION from build script
+
+#ifdef CRONET_VERSION
+  #define CRONET_LIB_NAME CRONET_LIB_PREFIX "." CRONET_VERSION CRONET_LIB_EXTENSION
+#else
+  #define CRONET_LIB_NAME CRONET_LIB_PREFIX CRONET_LIB_EXTENSION
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 // Initialize `dart_api_dl.h`
 intptr_t InitDartApiDL(void* data) {
