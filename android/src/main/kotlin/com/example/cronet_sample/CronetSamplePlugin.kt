@@ -20,7 +20,7 @@ class CronetSamplePlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    System.loadLibrary("cronet.91.0.4456.0")
+    System.loadLibrary("cronet.86.0.4240.198")
     System.loadLibrary("wrapper")
     ContextUtils.initApplicationContext(flutterPluginBinding.applicationContext)
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "cronet_sample")

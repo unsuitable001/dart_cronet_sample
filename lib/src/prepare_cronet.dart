@@ -14,7 +14,7 @@ final _cBinExtMap = {
   'androidarm64-v8a': '.tar.xz',
 };
 
-final _cronet_version = '"91.0.4456.0"';
+final _cronet_version = '"86.0.4240.198"';
 
 /// Builds the [wrapper] shared library
 /// according to [build.sh] file

@@ -15,7 +15,7 @@
 #ifdef CRONET_VERSION
   #define CRONET_LIB_NAME CRONET_LIB_PREFIX "." CRONET_VERSION CRONET_LIB_EXTENSION
 #else
-  #define CRONET_LIB_NAME CRONET_LIB_PREFIX CRONET_LIB_EXTENSION
+  #define CRONET_LIB_NAME CRONET_LIB_PREFIX ".86.0.4240.198" CRONET_LIB_EXTENSION
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 // Initialize `dart_api_dl.h`
@@ -29,10 +29,9 @@ intptr_t InitDartApiDL(void* data) {
 // loading cronet
 void *handle = dlopen(CRONET_LIB_NAME, RTLD_NOW);
 Dart_Port _callback_port;
-SampleExecutor executor;
-void destroy() {
-  dlclose(handle);
-}
+SampleExecutor* executor = new SampleExecutor();
+Cronet_EnginePtr cronet_engine = NULL;
+Cronet_BufferPtr buffer = NULL;
 
 static void FreeFinalizer(void*, void* value) {
   free(value);
@@ -102,6 +101,8 @@ Dart_CObject callbackArgBuilder(int num, ...) {
 /* Getting Cronet's Functions */
 
 Cronet_EnginePtr (*_Cronet_Engine_Create)(void) = reinterpret_cast<Cronet_EnginePtr (*)(void)>(dlsym(handle,"Cronet_Engine_Create"));
+void (*_Cronet_Engine_Destroy)(Cronet_EnginePtr) = reinterpret_cast<void (*)(Cronet_EnginePtr)>(dlsym(handle,"Cronet_Engine_Destroy"));
+Cronet_RESULT (*_Cronet_Engine_Shutdown)(Cronet_EnginePtr) = reinterpret_cast<Cronet_RESULT (*)(Cronet_EnginePtr)>(dlsym(handle,"Cronet_Engine_Shutdown"));
 Cronet_String (*_Cronet_Engine_GetVersionString)(Cronet_EnginePtr) = reinterpret_cast<Cronet_String (*)(Cronet_EnginePtr)>(dlsym(handle,"Cronet_Engine_GetVersionString"));
 Cronet_EngineParamsPtr (*_Cronet_EngineParams_Create)(void) = reinterpret_cast<Cronet_EngineParamsPtr (*)(void)>(dlsym(handle,"Cronet_EngineParams_Create"));
 void (*_Cronet_EngineParams_Destroy)(Cronet_EngineParamsPtr) = reinterpret_cast<void (*)(Cronet_EngineParamsPtr)>(dlsym(handle,"Cronet_EngineParams_Destroy"));
@@ -162,7 +163,25 @@ void (*_Cronet_Buffer_InitWithAlloc)(Cronet_BufferPtr, uint64_t) = reinterpret_c
 uint64_t (*_Cronet_Buffer_GetSize)(Cronet_BufferPtr) = reinterpret_cast<uint64_t (*)(Cronet_BufferPtr)>(dlsym(handle,"Cronet_Buffer_GetSize"));
 Cronet_RawDataPtr (*_Cronet_Buffer_GetData)(Cronet_BufferPtr) = reinterpret_cast<Cronet_RawDataPtr (*)(Cronet_BufferPtr)>(dlsym(handle,"Cronet_Buffer_GetData"));
 
+int64_t (*_Cronet_UrlResponseInfo_received_byte_count_get)(Cronet_UrlResponseInfoPtr) = reinterpret_cast<int64_t (*)(Cronet_UrlResponseInfoPtr)>(dlsym(handle,"Cronet_UrlResponseInfo_received_byte_count_get"));
 Cronet_String (*_Cronet_Error_message_get)(const Cronet_ErrorPtr) = reinterpret_cast<Cronet_String (*)(const Cronet_ErrorPtr)>(dlsym(handle,"Cronet_Error_message_get"));
+
+// void Cronet_Buffer_Destroy(Cronet_BufferPtr self) {_Cronet_Buffer_Destroy(self);}
+
+/* Engine Cleanup Tasks */
+static void RunFinalizer(void* isolate_callback_data,
+                         void* peer) {
+  delete executor;
+  _Cronet_Engine_Shutdown(cronet_engine);
+  _Cronet_Engine_Destroy(cronet_engine);
+  dlclose(handle);
+}
+
+void registerHttpClient(Dart_Handle h) {
+  void* peer = 0x0;
+  intptr_t size = 8;
+  auto finalizable_handle = Dart_NewFinalizableHandle_DL(h, peer, size, RunFinalizer);
+}
 
 /* URL Callbacks Implementations */
 
@@ -180,11 +199,12 @@ void OnResponseStarted(
     Cronet_UrlRequestPtr request,
     Cronet_UrlResponseInfoPtr info) {
     
-    dispatchCallback("OnResponseStarted", callbackArgBuilder(0));
-
   // Create and allocate 32kb buffer.
-  Cronet_BufferPtr buffer = _Cronet_Buffer_Create();
+  buffer = _Cronet_Buffer_Create();
   _Cronet_Buffer_InitWithAlloc(buffer, 32 * 1024);
+
+  dispatchCallback("OnResponseStarted", callbackArgBuilder(0));
+
   // Started reading the response.
   _Cronet_UrlRequest_Read(request, buffer);
    
@@ -205,6 +225,7 @@ void OnSucceeded(Cronet_UrlRequestCallbackPtr self, Cronet_UrlRequestPtr request
   printf("OnSucceeded");
   std::cout << "OnSucceeded called." << std::endl;
   dispatchCallback("OnSucceeded", callbackArgBuilder(0));
+  std:: cout << "Info: Rcvd bytes " << _Cronet_UrlResponseInfo_received_byte_count_get(info) << std::endl;
 }
 
 void OnFailed(
@@ -239,7 +260,7 @@ Cronet_EnginePtr Cronet_Engine_Create() {
     fprintf(stderr, "%s\n", dlerror());
     exit(EXIT_FAILURE);
   }
-  return _Cronet_Engine_Create();
+  return cronet_engine = _Cronet_Engine_Create();
 }
 
 // Mapping Cronet Function -> Wrapper function
@@ -286,11 +307,11 @@ uint64_t Cronet_Buffer_GetSize(Cronet_BufferPtr self) {return _Cronet_Buffer_Get
 
 // NOTE: Changed from original cronet's api. executor & callback params aren't needed
 Cronet_RESULT Cronet_UrlRequest_Init(Cronet_UrlRequestPtr self, Cronet_EnginePtr engine, Cronet_String url, Cronet_UrlRequestParamsPtr params) {
-    executor.Init();
+    executor->Init();
     Cronet_UrlRequestCallbackPtr urCallback = _Cronet_UrlRequestCallback_CreateWith(OnRedirectReceived, OnResponseStarted, OnReadCompleted,
         OnSucceeded, OnFailed, OnCanceled);
     
-    return _Cronet_UrlRequest_InitWithParams(self, engine, url, params, urCallback, executor.GetExecutor());
+    return _Cronet_UrlRequest_InitWithParams(self, engine, url, params, urCallback, executor->GetExecutor());
 
 } 
 

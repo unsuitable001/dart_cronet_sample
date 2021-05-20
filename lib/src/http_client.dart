@@ -46,6 +46,7 @@ class HttpClient {
       : _cronet_engine = _cronet.Cronet_Engine_Create() {
     // Initialize Dart Native API dynamically
     _cronet.InitDartApiDL(NativeApi.initializeApiDLData);
+    _cronet.registerHttpClient(this);
   }
 
   /// Opens a [url] using a [method] like GET

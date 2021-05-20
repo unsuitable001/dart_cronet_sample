@@ -18,13 +18,6 @@ class Cronet {
           lookup)
       : _lookup = lookup;
 
-  void destroy() {
-    return _destroy();
-  }
-
-  late final _destroy_ptr = _lookup<ffi.NativeFunction<_c_destroy>>('destroy');
-  late final _dart_destroy _destroy = _destroy_ptr.asFunction<_dart_destroy>();
-
   void registerCallbackHandler(
     int nativePort,
   ) {
@@ -64,6 +57,19 @@ class Cronet {
       _lookup<ffi.NativeFunction<_c_InitDartApiDL>>('InitDartApiDL');
   late final _dart_InitDartApiDL _InitDartApiDL =
       _InitDartApiDL_ptr.asFunction<_dart_InitDartApiDL>();
+
+  void registerHttpClient(
+    Object h,
+  ) {
+    return _registerHttpClient(
+      h,
+    );
+  }
+
+  late final _registerHttpClient_ptr =
+      _lookup<ffi.NativeFunction<_c_registerHttpClient>>('registerHttpClient');
+  late final _dart_registerHttpClient _registerHttpClient =
+      _registerHttpClient_ptr.asFunction<_dart_registerHttpClient>();
 
   ffi.Pointer<Cronet_Engine> Cronet_Engine_Create() {
     return _Cronet_Engine_Create();
@@ -526,10 +532,6 @@ abstract class Cronet_UrlRequestStatusListener_Status {
   static const int Cronet_UrlRequestStatusListener_Status_READING_RESPONSE = 14;
 }
 
-typedef _c_destroy = ffi.Void Function();
-
-typedef _dart_destroy = void Function();
-
 typedef _c_registerCallbackHandler = ffi.Void Function(
   ffi.Int64 nativePort,
 );
@@ -552,6 +554,14 @@ typedef _c_InitDartApiDL = ffi.IntPtr Function(
 
 typedef _dart_InitDartApiDL = int Function(
   ffi.Pointer<ffi.Void> data,
+);
+
+typedef _c_registerHttpClient = ffi.Void Function(
+  ffi.Handle h,
+);
+
+typedef _dart_registerHttpClient = void Function(
+  Object h,
 );
 
 typedef _c_Cronet_Engine_Create = ffi.Pointer<Cronet_Engine> Function();

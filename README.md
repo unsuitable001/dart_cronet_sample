@@ -1,6 +1,6 @@
 # dart_cronet_sample
 
-A simple HTTP Client in Dart based on Cronet.
+A simple HTTP Client in Dart based on Cronet. (Version: 86.0.4240.198)
 
 Ported from: https://chromium.googlesource.com/chromium/src/+/master/components/cronet/native/sample/
 
@@ -88,7 +88,7 @@ From this repository root
 
 ```bash
 cd lib/src/native/wrapper
-./build.sh .
+./build.sh . '"cronet_version"'
 ```
 
 Copy the `wrapper` binary to your project's `root` folder. 
