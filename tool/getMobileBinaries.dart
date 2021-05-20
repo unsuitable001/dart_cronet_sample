@@ -1,4 +1,3 @@
-
 import 'dart:io' show Directory, File;
 
 import 'package:cronet_sample/src/prepare_cronet.dart';
@@ -44,15 +43,13 @@ void placeMobileBinaries(String platform) {
   }
 }
 
-
 void main(List<String> platforms) {
-  if(platforms.isEmpty) {
+  if (platforms.isEmpty) {
     print('Please provide list of platforms');
     return;
   }
-  platforms.forEach((platform) async { 
+  platforms.forEach((platform) async {
     await downloadCronetBinaries(platform);
     placeMobileBinaries(platform);
   });
-  
 }

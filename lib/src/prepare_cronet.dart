@@ -22,7 +22,8 @@ void buildWrapper() {
   final wrapperPath = wrapperSourcePath();
 
   print('Building Wrapper...');
-  var result = Process.runSync(wrapperPath + '/build.sh', [wrapperPath, _cronet_version]);
+  var result = Process.runSync(
+      wrapperPath + '/build.sh', [wrapperPath, _cronet_version]);
   print(result.stdout);
   print(result.stderr);
   print('Copying wrapper to project root...');
@@ -35,21 +36,21 @@ void buildWrapper() {
 void placeBinaries(String platform, String fileName) {
   print('Extracting Cronet for $platform');
 
-    // Process.runSync('mkdir', ['-p', 'cronet_binaries']);
-    Directory('cronet_binaries').createSync();
+  // Process.runSync('mkdir', ['-p', 'cronet_binaries']);
+  Directory('cronet_binaries').createSync();
 
-    // Do we have tar extraction capability
-    // in dart's built-in libraries?
-    final res =
-        Process.runSync('tar', ['-xvf', fileName, '-C', 'cronet_binaries']);
-    if (res.exitCode != 0) {
-      throw Exception(
-          'Can\'t unzip. Check if the downloaded file isn\'t corrupted');
-    }
-    print('Done! Cleaning up...');
+  // Do we have tar extraction capability
+  // in dart's built-in libraries?
+  final res =
+      Process.runSync('tar', ['-xvf', fileName, '-C', 'cronet_binaries']);
+  if (res.exitCode != 0) {
+    throw Exception(
+        'Can\'t unzip. Check if the downloaded file isn\'t corrupted');
+  }
+  print('Done! Cleaning up...');
 
-    File(fileName).deleteSync();
-    print('Done! Cronet support for $platform is now available!');
+  File(fileName).deleteSync();
+  print('Done! Cronet support for $platform is now available!');
 }
 
 /// Download [cronet] library

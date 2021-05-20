@@ -53,7 +53,7 @@ ffigen:
       - 'dart_api_dl.h'
       - 'lib/src/native/wrapper/wrapper_export.h'
   compiler-opts:
-    - '-Ilib/src/native/include/ -DDART_SHARED_LIB'
+    - '-Ilib/src/native/include/dart/ -DDART_SHARED_LIB'
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
