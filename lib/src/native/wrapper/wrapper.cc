@@ -172,11 +172,11 @@ Cronet_String (*_Cronet_Error_message_get)(const Cronet_ErrorPtr) = reinterpret_
 static void RunFinalizer(void* isolate_callback_data,
                          void* peer) {
   delete executor;
-  _Cronet_Engine_Shutdown(cronet_engine);
   _Cronet_Engine_Destroy(cronet_engine);
   dlclose(handle);
 }
 
+// Register our HttpClient object from dart side
 void registerHttpClient(Dart_Handle h) {
   void* peer = 0x0;
   intptr_t size = 8;
@@ -262,6 +262,8 @@ Cronet_EnginePtr Cronet_Engine_Create() {
   }
   return cronet_engine = _Cronet_Engine_Create();
 }
+
+Cronet_RESULT Cronet_Engine_Shutdown(Cronet_EnginePtr self) { return _Cronet_Engine_Shutdown(self); }
 
 // Mapping Cronet Function -> Wrapper function
 // Most of them are unchanged, except some.

@@ -19,6 +19,7 @@ class _MyAppState extends State<MyApp> {
   String data = '';
   bool _fetching = false;
   final client = HttpClient();
+  HttpClientRequest _request;
   final _stopwatch = Stopwatch();
 
   @override
@@ -34,7 +35,9 @@ class _MyAppState extends State<MyApp> {
     client
         .getUrl(Uri.parse('http://info.cern.ch/'))
         .then((HttpClientRequest request) {
+      _stopwatch.reset();
       _stopwatch.start();
+      _request = request;
 
       /* The alternate API introduced.
       NOTE: If we register callbacks & listen to the stream at the same time,
@@ -57,6 +60,7 @@ class _MyAppState extends State<MyApp> {
         });
       }, onError: (e) {
         if (Platform.isLinux) {
+          _request.abort();
           print('See issue #8');
           request();
         }

@@ -51,7 +51,7 @@ class HttpClientRequest {
   /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance and
   /// a C pointer to [_cronet_engine].
   HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine)
-      : _cbh = _CallbackHandler(_cronet);
+      : _cbh = _CallbackHandler(_cronet, _cronet_engine);
 
   /// This is one of the methods to get data out of [HttpClientRequest].
   /// Accepted callbacks are [RedirectReceivedCallback],
@@ -87,6 +87,14 @@ class HttpClientRequest {
       _cbh.listen();
       return _cbh.stream;
     });
+  }
+
+  void abort([Object? exception, StackTrace? stackTrace]) {
+    _cronet.Cronet_Engine_Shutdown(_cronet_engine);
+    print(stackTrace);
+    if (exception is Exception) {
+      throw exception;
+    }
   }
 }
 
@@ -129,8 +137,9 @@ class _CallbackHandler {
   SuccessCallabck? _onSuccess;
 
   /// Registers the [NativePort] to the cronet side.
-  _CallbackHandler(this.cronet) {
+  _CallbackHandler(this.cronet, Pointer<Cronet_Engine> engine) {
     cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
+    _controller.done.whenComplete(() => cronet.Cronet_Engine_Shutdown(engine));
   }
 
   Stream<List<int>> get stream => _controller.stream;

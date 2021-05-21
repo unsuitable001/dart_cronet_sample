@@ -193,6 +193,20 @@ class Cronet {
       _Cronet_Engine_StartWithParams = _Cronet_Engine_StartWithParams_ptr
           .asFunction<_dart_Cronet_Engine_StartWithParams>();
 
+  int Cronet_Engine_Shutdown(
+    ffi.Pointer<Cronet_Engine> self,
+  ) {
+    return _Cronet_Engine_Shutdown(
+      self,
+    );
+  }
+
+  late final _Cronet_Engine_Shutdown_ptr =
+      _lookup<ffi.NativeFunction<_c_Cronet_Engine_Shutdown>>(
+          'Cronet_Engine_Shutdown');
+  late final _dart_Cronet_Engine_Shutdown _Cronet_Engine_Shutdown =
+      _Cronet_Engine_Shutdown_ptr.asFunction<_dart_Cronet_Engine_Shutdown>();
+
   ffi.Pointer<Cronet_UrlRequest> Cronet_UrlRequest_Create() {
     return _Cronet_UrlRequest_Create();
   }
@@ -628,6 +642,14 @@ typedef _c_Cronet_Engine_StartWithParams = ffi.Int32 Function(
 typedef _dart_Cronet_Engine_StartWithParams = int Function(
   ffi.Pointer<Cronet_Engine> self,
   ffi.Pointer<Cronet_EngineParams> params,
+);
+
+typedef _c_Cronet_Engine_Shutdown = ffi.Int32 Function(
+  ffi.Pointer<Cronet_Engine> self,
+);
+
+typedef _dart_Cronet_Engine_Shutdown = int Function(
+  ffi.Pointer<Cronet_Engine> self,
 );
 
 typedef _c_Cronet_UrlRequest_Create = ffi.Pointer<Cronet_UrlRequest> Function();

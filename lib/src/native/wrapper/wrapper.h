@@ -211,6 +211,8 @@ void Cronet_EngineParams_enable_quic_set(Cronet_EngineParamsPtr self,
 CRONET_EXPORT
 Cronet_RESULT Cronet_Engine_StartWithParams(Cronet_EnginePtr self,
                                             Cronet_EngineParamsPtr params);
+CRONET_EXPORT
+Cronet_RESULT Cronet_Engine_Shutdown(Cronet_EnginePtr self);
 
 typedef void (*Cronet_UrlRequestCallback_OnRedirectReceivedFunc)(
     Cronet_UrlRequestCallbackPtr self,
