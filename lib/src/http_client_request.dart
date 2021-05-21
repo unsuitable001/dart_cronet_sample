@@ -89,13 +89,33 @@ class HttpClientRequest {
     });
   }
 
+  /// Aborts the client connection.
+  ///
+  /// If the connection has not yet completed, the request is aborted
+  /// and closes the [Stream] with onDone callback you may have
+  /// registered. The [Exception] passed to it is thrown and
+  /// [StackTrace] is printed. If there is no [StackTrace] provided,
+  /// [StackTrace.empty] will be shown. If no [Exception] is provided,
+  /// no exception is thrown.
+  ///
+  /// If the [Stream] is closed, aborting has no effect.
   void abort([Object? exception, StackTrace? stackTrace]) {
-    _cronet.Cronet_Engine_Shutdown(_cronet_engine);
-    print(stackTrace);
-    if (exception is Exception) {
-      throw exception;
+    if (!_cbh._controller.isClosed) {
+      _cronet.Cronet_Engine_Shutdown(_cronet_engine);
+      _cbh._controller.close().whenComplete(() {
+        print(stackTrace ?? StackTrace.empty);
+        if (exception is Exception) {
+          throw exception;
+        }
+      });
     }
   }
+
+  /// Done is same as [close]. A [Stream<List<int>>] future that will complete once the response is available.
+  /// Analogus to [HttpClientResponse].
+  ///
+  /// If an error occurs before the response is available, this future will complete with an error.
+  Future<Stream<List<int>>> get done => close();
 }
 
 /// Deserializes the message sent by
