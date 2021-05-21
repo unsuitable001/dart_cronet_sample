@@ -245,19 +245,18 @@ class _CallbackHandler {
 
             print('Recieved: $bytes_read');
 
+            final data = cronet.Cronet_Buffer_GetData(buffer)
+                .cast<Uint8>()
+                .asTypedList(bytes_read);
+
             // invoke the callback
             if (_onReadData != null) {
-              _onReadData!(
-                  cronet.Cronet_Buffer_GetData(buffer)
-                      .cast<Uint8>()
-                      .asTypedList(bytes_read),
-                  bytes_read,
+              _onReadData!(data, bytes_read,
                   () => cronet.Cronet_UrlRequest_Read(request, buffer));
             } else {
               // or, add data to the stream
-              _controller.sink.add(cronet.Cronet_Buffer_GetData(buffer)
-                  .cast<Uint8>()
-                  .asTypedList(bytes_read));
+              // why .toList - SEE ISSUE #8
+              _controller.sink.add(data.toList(growable: false));
               cronet.Cronet_UrlRequest_Read(request, buffer);
             }
           }

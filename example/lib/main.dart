@@ -59,11 +59,7 @@ class _MyAppState extends State<MyApp> {
           _fetching = false;
         });
       }, onError: (e) {
-        if (Platform.isLinux) {
-          _request.abort();
-          print('See issue #8');
-          request();
-        }
+        _request.abort();
       });
     });
   }
