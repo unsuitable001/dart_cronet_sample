@@ -27,7 +27,7 @@ intptr_t InitDartApiDL(void* data) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // loading cronet
-void *handle = dlopen(CRONET_LIB_NAME, RTLD_NOW);
+LIBTYPE handle = OPENLIB(CRONET_LIB_NAME);
 Dart_Port _callback_port;
 SampleExecutor* executor = new SampleExecutor();
 Cronet_EnginePtr cronet_engine = NULL;
@@ -173,7 +173,7 @@ static void RunFinalizer(void* isolate_callback_data,
                          void* peer) {
   delete executor;
   _Cronet_Engine_Destroy(cronet_engine);
-  dlclose(handle);
+  CLOSELIB(handle);
 }
 
 // Register our HttpClient object from dart side
