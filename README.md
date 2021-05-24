@@ -30,7 +30,7 @@ Desktop Platforms
 pub get
 pub run cronet_sample <platform>
 ```
-Supported platforms: `linux64`
+Supported platforms: `linux64` and `windows64`
 
 
 Mobile Platforms (Flutter)
@@ -92,9 +92,20 @@ cd lib/src/native/wrapper
 ```
 
 Copy the `wrapper` binary to your project's `root` folder. 
-Copy the cronet's binary to the `cronet_binaries/<platform><arch>` folder from project's `root` folder.
+Copy the cronet's binary to the `cronet_binaries/<platform><arch>` folder from project's `root` folder. (Except on Windows. There, everything will be on root dir only)
 
 *If you are in 64bit linux system, `cronet_binaries/<platform><arch>` will be `cronet_binaries/linux64`.*
+
+### Special instruction for Windows
+
+Due to an issue (#10), I'm temporarily using this solution.
+
+1. Uncomment windows: pluginClass from `pubspec.yaml`
+2. Go to `example` and do a `flutter run`. If it crashes, let it be. We just want to trigger the build.
+3. From `example` directory, go to `build\windows\plugins\cronet_sample\Debug` and there you will find `cronet_sample_plugin.dll`
+4. Rename `cronet_sample_plugin.dll` to `wrapper.dll` and you got your wrapper.
+
+If you also want to find `flutter_windows.dll`, it will be at `build\windows\runner\Debug` relative to `example` folder.
 
 ## Run Example
 

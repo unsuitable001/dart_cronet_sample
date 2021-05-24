@@ -1,6 +1,6 @@
 // Contains the nessesary setup code only. Not meant to be exposed.
 
-import 'dart:io' show Directory, File, Process, ProcessStartMode;
+import 'dart:io' show Directory, File, Process, ProcessResult, ProcessStartMode;
 
 // import 'package:path/path.dart';
 
@@ -11,6 +11,7 @@ final _cronetBinaryUrl =
     'https://github.com/unsuitable001/dart_cronet_sample/releases/download/$_release/';
 final _cBinExtMap = {
   'linux64': '.tar.xz',
+  'windows64': '.tar.gz',
   'androidarm64-v8a': '.tar.xz',
 };
 
@@ -35,14 +36,20 @@ void buildWrapper() {
 /// Place downloaded binaries to proper location
 void placeBinaries(String platform, String fileName) {
   print('Extracting Cronet for $platform');
-
+  ProcessResult res;
   // Process.runSync('mkdir', ['-p', 'cronet_binaries']);
-  Directory('cronet_binaries').createSync();
+  if(platform.startsWith('windows')) {
+    res =
+        Process.runSync('tar', ['-xvf', fileName]);
+  } else {
+    Directory('cronet_binaries').createSync();
 
-  // Do we have tar extraction capability
-  // in dart's built-in libraries?
-  final res =
-      Process.runSync('tar', ['-xvf', fileName, '-C', 'cronet_binaries']);
+    // Do we have tar extraction capability
+    // in dart's built-in libraries?
+    res =
+        Process.runSync('tar', ['-xvf', fileName, '-C', 'cronet_binaries']);
+  }
+
   if (res.exitCode != 0) {
     throw Exception(
         'Can\'t unzip. Check if the downloaded file isn\'t corrupted');
@@ -60,8 +67,9 @@ Future<void> downloadCronetBinaries(String platform) async {
     final fileName = platform + (_cBinExtMap[platform] ?? '');
     print('Downloading Cronet for $platform');
     final downloadUrl = _cronetBinaryUrl + fileName;
-    final dProcess = await Process.start('wget',
-        ['-c', '-q', '--show-progress', '--progress=bar:force', downloadUrl],
+    print(downloadUrl);
+    final dProcess = await Process.start('curl',
+        ['-OL', downloadUrl],
         mode: ProcessStartMode.inheritStdio);
     if (await dProcess.exitCode != 0) {
       throw Exception('Can\'t download. Check your network connection!');
