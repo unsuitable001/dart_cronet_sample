@@ -14,6 +14,15 @@
 #else
   #define CRONET_LIB_NAME CRONET_LIB_PREFIX ".86.0.4240.198" CRONET_LIB_EXTENSION
 #endif
+
+// cronet function loading and exposing macros
+// use IMPORT for private use - accessable as func_name
+// use P_IMPORT for those API who needs to be wrapped before exposing - accessable as _func_name
+
+#define IMPORT(r_type, f_name, ...) r_type (* f_name) (__VA_ARGS__) = reinterpret_cast<r_type (*)(__VA_ARGS__)>(dlsym(handle, #f_name))
+
+#define P_IMPORT(r_type, f_name, ...) r_type (* _ ## f_name) (__VA_ARGS__) = reinterpret_cast<r_type (*)(__VA_ARGS__)>(dlsym(handle, #f_name))
+
 ////////////////////////////////////////////////////////////////////////////////
 // Initialize `dart_api_dl.h`
 intptr_t InitDartApiDL(void* data) {
@@ -95,72 +104,45 @@ Dart_CObject callbackArgBuilder(int num, ...) {
 
 
 /* Getting Cronet's Functions */
-
-Cronet_EnginePtr (*_Cronet_Engine_Create)(void) = reinterpret_cast<Cronet_EnginePtr (*)(void)>(dlsym(handle,"Cronet_Engine_Create"));
-void (*_Cronet_Engine_Destroy)(Cronet_EnginePtr) = reinterpret_cast<void (*)(Cronet_EnginePtr)>(dlsym(handle,"Cronet_Engine_Destroy"));
-Cronet_RESULT (*_Cronet_Engine_Shutdown)(Cronet_EnginePtr) = reinterpret_cast<Cronet_RESULT (*)(Cronet_EnginePtr)>(dlsym(handle,"Cronet_Engine_Shutdown"));
-Cronet_String (*_Cronet_Engine_GetVersionString)(Cronet_EnginePtr) = reinterpret_cast<Cronet_String (*)(Cronet_EnginePtr)>(dlsym(handle,"Cronet_Engine_GetVersionString"));
-Cronet_EngineParamsPtr (*_Cronet_EngineParams_Create)(void) = reinterpret_cast<Cronet_EngineParamsPtr (*)(void)>(dlsym(handle,"Cronet_EngineParams_Create"));
-void (*_Cronet_EngineParams_Destroy)(Cronet_EngineParamsPtr) = reinterpret_cast<void (*)(Cronet_EngineParamsPtr)>(dlsym(handle,"Cronet_EngineParams_Destroy"));
-void (*_Cronet_EngineParams_enable_check_result_set)(Cronet_EngineParamsPtr, const bool) = reinterpret_cast<void (*)(Cronet_EngineParamsPtr, const bool)>(dlsym(handle,"Cronet_EngineParams_enable_check_result_set"));
-void (*_Cronet_EngineParams_user_agent_set)(Cronet_EngineParamsPtr, const Cronet_String) = reinterpret_cast<void (*)(Cronet_EngineParamsPtr, const Cronet_String)>(dlsym(handle,"Cronet_EngineParams_enable_check_result_set"));
-void (*_Cronet_EngineParams_enable_quic_set)(Cronet_EngineParamsPtr, const bool) = reinterpret_cast<void (*)(Cronet_EngineParamsPtr, const bool)>(dlsym(handle,"Cronet_EngineParams_enable_quic_set"));
-Cronet_RESULT (*_Cronet_Engine_StartWithParams)(Cronet_EnginePtr, Cronet_EngineParamsPtr) = reinterpret_cast<Cronet_RESULT (*)(Cronet_EnginePtr, Cronet_EngineParamsPtr)>(dlsym(handle,"Cronet_Engine_StartWithParams"));
-
-Cronet_UrlRequestPtr (*_Cronet_UrlRequest_Create)(void) = reinterpret_cast<Cronet_UrlRequestPtr (*)(void)>(dlsym(handle,"Cronet_UrlRequest_Create"));
-void (*_Cronet_UrlRequest_Destroy)(Cronet_UrlRequestPtr) = reinterpret_cast<void (*)(Cronet_UrlRequestPtr)>(dlsym(handle,"Cronet_UrlRequest_Destroy"));
-void (*_Cronet_UrlRequest_SetClientContext) (Cronet_UrlRequestPtr, Cronet_ClientContext) = reinterpret_cast<void (*) (Cronet_UrlRequestPtr, Cronet_ClientContext)>(dlsym(handle,"Cronet_UrlRequest_SetClientContext"));
-Cronet_ClientContext (*_Cronet_UrlRequest_GetClientContext)(Cronet_UrlRequestPtr) = reinterpret_cast<Cronet_ClientContext (*)(Cronet_UrlRequestPtr)>(dlsym(handle,"Cronet_UrlRequest_GetClientContext"));
-
-
-Cronet_UrlRequestParamsPtr (*_Cronet_UrlRequestParams_Create)(void)  = reinterpret_cast<Cronet_UrlRequestParamsPtr (*)(void)>(dlsym(handle,"Cronet_UrlRequestParams_Create"));
-void (*_Cronet_UrlRequestParams_http_method_set)(
-    Cronet_UrlRequestParamsPtr,
-    const Cronet_String) = reinterpret_cast<void (*)(Cronet_UrlRequestParamsPtr,
-                                             const Cronet_String)>(dlsym(handle,"Cronet_UrlRequestParams_http_method_set"));
-
-
+P_IMPORT(Cronet_EnginePtr,Cronet_Engine_Create , void);
+P_IMPORT(void, Cronet_Engine_Destroy, Cronet_EnginePtr);
+P_IMPORT(Cronet_RESULT, Cronet_Engine_Shutdown, Cronet_EnginePtr);
+P_IMPORT(Cronet_String, Cronet_Engine_GetVersionString, Cronet_EnginePtr);
+P_IMPORT(Cronet_EngineParamsPtr, Cronet_EngineParams_Create, void);
+P_IMPORT(void, Cronet_EngineParams_Destroy, Cronet_EngineParamsPtr);
+P_IMPORT(void, Cronet_EngineParams_enable_check_result_set, Cronet_EngineParamsPtr, const bool);
+P_IMPORT(void, Cronet_EngineParams_user_agent_set, Cronet_EngineParamsPtr, const Cronet_String);
+P_IMPORT(void, Cronet_EngineParams_enable_quic_set, Cronet_EngineParamsPtr, const bool);
+P_IMPORT(Cronet_RESULT, Cronet_Engine_StartWithParams, Cronet_EnginePtr, Cronet_EngineParamsPtr);
+P_IMPORT(Cronet_UrlRequestPtr, Cronet_UrlRequest_Create, void);
+P_IMPORT(void, Cronet_UrlRequest_Destroy, Cronet_UrlRequestPtr);
+P_IMPORT(void, Cronet_UrlRequest_SetClientContext, Cronet_UrlRequestPtr, Cronet_ClientContext);
+P_IMPORT(Cronet_ClientContext, Cronet_UrlRequest_GetClientContext, Cronet_UrlRequestPtr);
+P_IMPORT(Cronet_UrlRequestParamsPtr, Cronet_UrlRequestParams_Create, void);
+P_IMPORT(void, Cronet_UrlRequestParams_http_method_set, Cronet_UrlRequestParamsPtr, const Cronet_String);
 
 // Unexposed - see Cronet_UrlRequest_Init
-Cronet_RESULT (*_Cronet_UrlRequest_InitWithParams)(
-    Cronet_UrlRequestPtr,
-    Cronet_EnginePtr,
-    Cronet_String,
-    Cronet_UrlRequestParamsPtr,
-    Cronet_UrlRequestCallbackPtr,
-    Cronet_ExecutorPtr) = reinterpret_cast<Cronet_RESULT (*)(
-    Cronet_UrlRequestPtr,
-    Cronet_EnginePtr,
-    Cronet_String,
-    Cronet_UrlRequestParamsPtr,
-    Cronet_UrlRequestCallbackPtr,
-    Cronet_ExecutorPtr)>(dlsym(handle,"Cronet_UrlRequest_InitWithParams"));
+P_IMPORT(Cronet_RESULT, Cronet_UrlRequest_InitWithParams, Cronet_UrlRequestPtr, Cronet_EnginePtr, Cronet_String, Cronet_UrlRequestParamsPtr, Cronet_UrlRequestCallbackPtr, Cronet_ExecutorPtr);
 
 // Unexposed - see Cronet_UrlRequest_Init
-Cronet_UrlRequestCallbackPtr (*_Cronet_UrlRequestCallback_CreateWith)(Cronet_UrlRequestCallback_OnRedirectReceivedFunc,
-    Cronet_UrlRequestCallback_OnResponseStartedFunc,
-    Cronet_UrlRequestCallback_OnReadCompletedFunc,
-    Cronet_UrlRequestCallback_OnSucceededFunc,
-    Cronet_UrlRequestCallback_OnFailedFunc,
-    Cronet_UrlRequestCallback_OnCanceledFunc) = reinterpret_cast<Cronet_UrlRequestCallbackPtr (*)(Cronet_UrlRequestCallback_OnRedirectReceivedFunc,
-    Cronet_UrlRequestCallback_OnResponseStartedFunc,
-    Cronet_UrlRequestCallback_OnReadCompletedFunc,
-    Cronet_UrlRequestCallback_OnSucceededFunc,
-    Cronet_UrlRequestCallback_OnFailedFunc,
-    Cronet_UrlRequestCallback_OnCanceledFunc)>(dlsym(handle,"Cronet_UrlRequestCallback_CreateWith"));
+P_IMPORT(Cronet_UrlRequestCallbackPtr, Cronet_UrlRequestCallback_CreateWith, 
+  Cronet_UrlRequestCallback_OnRedirectReceivedFunc,
+  Cronet_UrlRequestCallback_OnResponseStartedFunc,
+  Cronet_UrlRequestCallback_OnReadCompletedFunc,
+  Cronet_UrlRequestCallback_OnSucceededFunc,
+  Cronet_UrlRequestCallback_OnFailedFunc,
+  Cronet_UrlRequestCallback_OnCanceledFunc);
 
-Cronet_RESULT (*_Cronet_UrlRequest_Start)(Cronet_UrlRequestPtr) = reinterpret_cast<Cronet_RESULT (*)(Cronet_UrlRequestPtr)>(dlsym(handle,"Cronet_UrlRequest_Start"));
-Cronet_RESULT (*_Cronet_UrlRequest_FollowRedirect)(Cronet_UrlRequestPtr) = reinterpret_cast<Cronet_RESULT (*)(Cronet_UrlRequestPtr)>(dlsym(handle,"Cronet_UrlRequest_FollowRedirect"));
-Cronet_RESULT (*_Cronet_UrlRequest_Read)(Cronet_UrlRequestPtr, Cronet_BufferPtr) = reinterpret_cast<Cronet_RESULT (*)(Cronet_UrlRequestPtr, Cronet_BufferPtr)>(dlsym(handle,"Cronet_UrlRequest_Read"));
-
-Cronet_BufferPtr (*_Cronet_Buffer_Create)(void) = reinterpret_cast<Cronet_BufferPtr (*)(void)>(dlsym(handle,"Cronet_Buffer_Create"));
-void (*_Cronet_Buffer_Destroy)(Cronet_BufferPtr) = reinterpret_cast<void (*)(Cronet_BufferPtr)>(dlsym(handle,"Cronet_Buffer_Destroy"));
-void (*_Cronet_Buffer_InitWithAlloc)(Cronet_BufferPtr, uint64_t) = reinterpret_cast<void (*)(Cronet_BufferPtr, uint64_t)>(dlsym(handle,"Cronet_Buffer_InitWithAlloc"));
-uint64_t (*_Cronet_Buffer_GetSize)(Cronet_BufferPtr) = reinterpret_cast<uint64_t (*)(Cronet_BufferPtr)>(dlsym(handle,"Cronet_Buffer_GetSize"));
-Cronet_RawDataPtr (*_Cronet_Buffer_GetData)(Cronet_BufferPtr) = reinterpret_cast<Cronet_RawDataPtr (*)(Cronet_BufferPtr)>(dlsym(handle,"Cronet_Buffer_GetData"));
-
-int64_t (*_Cronet_UrlResponseInfo_received_byte_count_get)(Cronet_UrlResponseInfoPtr) = reinterpret_cast<int64_t (*)(Cronet_UrlResponseInfoPtr)>(dlsym(handle,"Cronet_UrlResponseInfo_received_byte_count_get"));
-Cronet_String (*_Cronet_Error_message_get)(const Cronet_ErrorPtr) = reinterpret_cast<Cronet_String (*)(const Cronet_ErrorPtr)>(dlsym(handle,"Cronet_Error_message_get"));
+P_IMPORT(Cronet_RESULT, Cronet_UrlRequest_Start, Cronet_UrlRequestPtr);
+P_IMPORT(Cronet_RESULT, Cronet_UrlRequest_FollowRedirect, Cronet_UrlRequestPtr);
+P_IMPORT(Cronet_RESULT, Cronet_UrlRequest_Read, Cronet_UrlRequestPtr, Cronet_BufferPtr);
+P_IMPORT(Cronet_BufferPtr, Cronet_Buffer_Create, void);
+P_IMPORT(void, Cronet_Buffer_Destroy, Cronet_BufferPtr);
+P_IMPORT(void, Cronet_Buffer_InitWithAlloc, Cronet_BufferPtr, uint64_t);
+P_IMPORT(uint64_t, Cronet_Buffer_GetSize, Cronet_BufferPtr);
+P_IMPORT(Cronet_RawDataPtr, Cronet_Buffer_GetData, Cronet_BufferPtr);
+P_IMPORT(int64_t, Cronet_UrlResponseInfo_received_byte_count_get, Cronet_UrlResponseInfoPtr);
+P_IMPORT(Cronet_String, Cronet_Error_message_get, const Cronet_ErrorPtr);
 
 // void Cronet_Buffer_Destroy(Cronet_BufferPtr self) {_Cronet_Buffer_Destroy(self);}
 

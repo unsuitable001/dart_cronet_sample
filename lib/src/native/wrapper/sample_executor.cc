@@ -8,23 +8,22 @@
 extern LIBTYPE handle;
 extern Dart_Port _callback_port;
 
+// cronet function loading and exposing macros
+// use IMPORT to expose a API unchanged or just for private use - accessable as func_name
+// use P_IMPORT for those API who needs to be wrapped before exposing - accessable as _func_name
+
+#define IMPORT(r_type, f_name, ...) r_type (* f_name) (__VA_ARGS__) = reinterpret_cast<r_type (*)(__VA_ARGS__)>(dlsym(handle, #f_name))
+
+#define P_IMPORT(r_type, f_name, ...) r_type (* _ ## f_name) (__VA_ARGS__) = reinterpret_cast<r_type (*)(__VA_ARGS__)>(dlsym(handle, #f_name))
+
 /* Executor Only */
 
-Cronet_ExecutorPtr (*Cronet_Executor_CreateWith) (Cronet_Executor_ExecuteFunc) = reinterpret_cast<Cronet_ExecutorPtr (*) (Cronet_Executor_ExecuteFunc)>(dlsym(handle,"Cronet_Executor_CreateWith"));
-void (*Cronet_Executor_SetClientContext)(
-    Cronet_ExecutorPtr,
-    Cronet_ClientContext) = reinterpret_cast<void (*)(
-    Cronet_ExecutorPtr,
-    Cronet_ClientContext)>(dlsym(handle,"Cronet_Executor_SetClientContext"));
-
-
-void (*Cronet_Executor_Destroy)(Cronet_ExecutorPtr) = reinterpret_cast<void (*) (Cronet_ExecutorPtr) >(dlsym(handle,"Cronet_Executor_Destroy"));
-
-void (*Cronet_Runnable_Run)(Cronet_RunnablePtr) = reinterpret_cast<void (*)(Cronet_RunnablePtr) >(dlsym(handle,"Cronet_Runnable_Run"));
-
-void (*Cronet_Runnable_Destroy)(Cronet_RunnablePtr) = reinterpret_cast<void (*)(Cronet_RunnablePtr)>(dlsym(handle,"Cronet_Runnable_Destroy"));
-
-Cronet_ClientContext (*Cronet_Executor_GetClientContext)(Cronet_ExecutorPtr) = reinterpret_cast<Cronet_ClientContext (*)(Cronet_ExecutorPtr)>(dlsym(handle,"Cronet_Executor_GetClientContext"));
+IMPORT(Cronet_ExecutorPtr, Cronet_Executor_CreateWith, Cronet_Executor_ExecuteFunc);
+IMPORT(void, Cronet_Executor_SetClientContext, Cronet_ExecutorPtr, Cronet_ClientContext);
+IMPORT(void, Cronet_Executor_Destroy, Cronet_ExecutorPtr);
+IMPORT(void, Cronet_Runnable_Run, Cronet_RunnablePtr);
+IMPORT(void, Cronet_Runnable_Destroy, Cronet_RunnablePtr);
+IMPORT(Cronet_ClientContext, Cronet_Executor_GetClientContext, Cronet_ExecutorPtr);
 
 SampleExecutor::SampleExecutor()
     : executor_thread_(SampleExecutor::ThreadLoop, this) {}
