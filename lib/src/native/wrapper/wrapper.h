@@ -5,13 +5,31 @@
 // #include "dart_api.h"
 // #include "dart_native_api.h"
 
-#include "dart_api_dl.h"
+#include "../include/dart/dart_api_dl.h"
 
 
 #include"wrapper_export.h"
 
 #include<stdbool.h>
-#include <dlfcn.h>
+
+#ifdef __linux__
+  #include <dlfcn.h>
+  #define LIBTYPE void*
+  #define OPENLIB(libname) dlopen((libname), RTLD_NOW)
+  #define CLOSELIB(handle) dlclose((handle))
+  #define CRONET_LIB_PREFIX "libcronet"
+  #define CRONET_LIB_EXTENSION ".so"
+#elif defined(_WIN32)
+#include<windows.h>
+  #define LIBTYPE HINSTANCE
+  #define OPENLIB(libname) LoadLibrary(TEXT(libname))
+  #define dlsym(lib, fn) (void *)GetProcAddress((lib), (fn))
+  #define dlerror() GetLastError()
+  #define CLOSELIB(handle) FreeLibrary((handle))
+  #define CRONET_LIB_PREFIX "cronet"
+  #define CRONET_LIB_EXTENSION ".dll"
+#endif
+
 
 #ifdef __cplusplus
 

@@ -12,13 +12,13 @@ dependencies:
   # flutter:
   #   sdk: flutter
   ffi: ^1.0.0
-  path: any
+  path: ^1.8.0
 
 dev_dependencies:
   # flutter_test:
   #   sdk: flutter
   pedantic: ^1.11.0
-  ffigen: ^2.4.0
+  ffigen: ^2.4.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -34,6 +34,8 @@ flutter:
       android:
         package: com.example.cronet_sample
         pluginClass: CronetSamplePlugin
+      # windows:
+      #   pluginClass: CronetSamplePlugin
       # linux:
       #   pluginClass: CronetSamplePlugin
 

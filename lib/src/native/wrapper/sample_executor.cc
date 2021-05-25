@@ -5,7 +5,7 @@
 // found in the LICENSE file.
 #include "sample_executor.h"
 #include <iostream>
-extern void *handle;
+extern LIBTYPE handle;
 extern Dart_Port _callback_port;
 
 /* Executor Only */

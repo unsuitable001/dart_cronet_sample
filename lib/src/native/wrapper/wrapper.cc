@@ -1,14 +1,11 @@
-#include"dart_api.h"
-#include"dart_native_api.h"
-#include"dart_tools_api.h"
+#include "../include/dart/dart_api.h"
+#include "../include/dart/dart_native_api.h"
+#include "../include/dart/dart_tools_api.h"
 // #include"dart_api_dl.c"
-#include"wrapper.h"
+#include "wrapper.h"
 #include "sample_executor.h"
 #include <iostream>
 #include <stdarg.h>
-
-#define CRONET_LIB_PREFIX "libcronet"
-#define CRONET_LIB_EXTENSION ".so"
 
 // Set CRONET_VERSION from build script
 
@@ -27,11 +24,10 @@ intptr_t InitDartApiDL(void* data) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // loading cronet
-void *handle = dlopen(CRONET_LIB_NAME, RTLD_NOW);
+LIBTYPE handle = OPENLIB(CRONET_LIB_NAME);
 Dart_Port _callback_port;
 SampleExecutor* executor = new SampleExecutor();
 Cronet_EnginePtr cronet_engine = NULL;
-Cronet_BufferPtr buffer = NULL;
 
 static void FreeFinalizer(void*, void* value) {
   free(value);
@@ -173,14 +169,14 @@ static void RunFinalizer(void* isolate_callback_data,
                          void* peer) {
   delete executor;
   _Cronet_Engine_Destroy(cronet_engine);
-  dlclose(handle);
+  CLOSELIB(handle);
 }
 
 // Register our HttpClient object from dart side
 void registerHttpClient(Dart_Handle h) {
   void* peer = 0x0;
   intptr_t size = 8;
-  auto finalizable_handle = Dart_NewFinalizableHandle_DL(h, peer, size, RunFinalizer);
+  Dart_NewFinalizableHandle_DL(h, peer, size, RunFinalizer);
 }
 
 /* URL Callbacks Implementations */
@@ -200,7 +196,7 @@ void OnResponseStarted(
     Cronet_UrlResponseInfoPtr info) {
     
   // Create and allocate 32kb buffer.
-  buffer = _Cronet_Buffer_Create();
+  Cronet_BufferPtr buffer = _Cronet_Buffer_Create();
   _Cronet_Buffer_InitWithAlloc(buffer, 32 * 1024);
 
   dispatchCallback("OnResponseStarted", callbackArgBuilder(0));
@@ -257,7 +253,7 @@ Cronet_EnginePtr Cronet_Engine_Create() {
   // if this succeeds, every subsequent use
   // of cronet [handle] should.
   if (!handle) {
-    fprintf(stderr, "%s\n", dlerror());
+    std::clog << dlerror() << std::endl;
     exit(EXIT_FAILURE);
   }
   return cronet_engine = _Cronet_Engine_Create();
