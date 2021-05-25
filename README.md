@@ -96,16 +96,19 @@ Copy the cronet's binary to the `cronet_binaries/<platform><arch>` folder from p
 
 *If you are in 64bit linux system, `cronet_binaries/<platform><arch>` will be `cronet_binaries/linux64`.*
 
-### Special instruction for Windows
+### For Windows
 
-Due to an issue (#10), I'm temporarily using this solution.
+Required: Visual Studio 2019 with C++ Desktop Development tools.
 
-1. Uncomment windows: pluginClass from `pubspec.yaml`
-2. Go to `example` and do a `flutter run`. If it crashes, let it be. We just want to trigger the build.
-3. From `example` directory, go to `build\windows\plugins\cronet_sample\Debug` and there you will find `cronet_sample_plugin.dll`
-4. Rename `cronet_sample_plugin.dll` to `wrapper.dll` and you got your wrapper.
+1. Make sure that you have `cmake` for Visual Studio 2019 is available in your command line. If not, you should open something like `x64 Native Tools Command Prompt for VS 2019` from your start menu which will open a command prompt with required path set.
 
-If you also want to find `flutter_windows.dll`, it will be at `build\windows\runner\Debug` relative to `example` folder.
+2. In the command prompt do -
+```
+cd <path_to_repo>\lib\src\native\wrapper
+cmake CMakeLists.txt -B out
+cmake --build out
+```
+3. From there, go to `out\Debug` folder to get `wrapper.dll`
 
 ## Run Example
 
