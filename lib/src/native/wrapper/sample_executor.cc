@@ -28,6 +28,7 @@ IMPORT(Cronet_ClientContext, Cronet_Executor_GetClientContext, Cronet_ExecutorPt
 SampleExecutor::SampleExecutor()
     : executor_thread_(SampleExecutor::ThreadLoop, this) {}
 SampleExecutor::~SampleExecutor() {
+  std::cout << "SampleExec Destructor" << std::endl;
   ShutdownExecutor();
   Cronet_Executor_Destroy(executor_);
 }

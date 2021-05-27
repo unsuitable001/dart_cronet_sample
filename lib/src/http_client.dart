@@ -34,7 +34,7 @@ final _cronet = Cronet(loadWrapper());
 /// });
 /// ```
 class HttpClient {
-  String userAgent = 'Dart/2.12';
+  final String userAgent;
   final Pointer<Cronet_Engine> _cronet_engine;
   final bool quic;
 
@@ -42,11 +42,24 @@ class HttpClient {
   ///
   /// An optional parameter [quic] can be provided to
   /// use QUIC protocol.
-  HttpClient({this.quic = true})
+  ///
+  /// Breaking Changes from [dart:io] based library:
+  ///
+  /// 1. [userAgent] property must be set when constructing [HttpClient] and can't be changed afterwards.
+  HttpClient({this.userAgent = 'Dart/2.12', this.quic = true})
       : _cronet_engine = _cronet.Cronet_Engine_Create() {
     // Initialize Dart Native API dynamically
     _cronet.InitDartApiDL(NativeApi.initializeApiDLData);
     _cronet.registerHttpClient(this);
+
+    // starting the engine with parameters
+    final engine_params = _cronet.Cronet_EngineParams_Create();
+    _cronet.Cronet_EngineParams_user_agent_set(
+        engine_params, userAgent.toNativeUtf8().cast<Int8>());
+    _cronet.Cronet_EngineParams_enable_quic_set(engine_params, quic);
+
+    _cronet.Cronet_Engine_StartWithParams(_cronet_engine, engine_params);
+    _cronet.Cronet_EngineParams_Destroy(engine_params);
   }
 
   /// Opens a [url] using a [method] like GET
@@ -54,23 +67,20 @@ class HttpClient {
   /// Returns a [Future] of [HttpClientRequest].
   Future<HttpClientRequest> openUrl(String method, Uri url) {
     return Future(() {
-      final engine_params = _cronet.Cronet_EngineParams_Create();
-      _cronet.Cronet_EngineParams_user_agent_set(
-          engine_params, userAgent.toNativeUtf8().cast<Int8>());
-
-      // Set quic settings
-      _cronet.Cronet_EngineParams_enable_quic_set(engine_params, quic);
-
-      // Starts engine
-      _cronet.Cronet_Engine_StartWithParams(_cronet_engine, engine_params);
-      _cronet.Cronet_EngineParams_Destroy(engine_params);
       return HttpClientRequest(url, method, _cronet, _cronet_engine);
     });
   }
 
+  /// Opens a request on the basis of [host], [port] and [path] using GET method/
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
   Future<HttpClientRequest> get(String host, int port, String path) {
-    // TODO: Implement Function
-    throw UnimplementedError();
+    final _host = Uri.parse(host);
+    if (!_host.hasScheme) {
+      throw Exception('Scheme not mentioned! $host');
+    }
+    return getUrl(
+        Uri(scheme: _host.scheme, host: _host.host, port: port, path: path));
   }
 
   /// Opens a [url] using GET method.

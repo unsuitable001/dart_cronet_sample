@@ -38,16 +38,14 @@ void placeBinaries(String platform, String fileName) {
   print('Extracting Cronet for $platform');
   ProcessResult res;
   // Process.runSync('mkdir', ['-p', 'cronet_binaries']);
-  if(platform.startsWith('windows')) {
-    res =
-        Process.runSync('tar', ['-xvf', fileName]);
+  if (platform.startsWith('windows')) {
+    res = Process.runSync('tar', ['-xvf', fileName]);
   } else {
     Directory('cronet_binaries').createSync();
 
     // Do we have tar extraction capability
     // in dart's built-in libraries?
-    res =
-        Process.runSync('tar', ['-xvf', fileName, '-C', 'cronet_binaries']);
+    res = Process.runSync('tar', ['-xvf', fileName, '-C', 'cronet_binaries']);
   }
 
   if (res.exitCode != 0) {
@@ -68,8 +66,7 @@ Future<void> downloadCronetBinaries(String platform) async {
     print('Downloading Cronet for $platform');
     final downloadUrl = _cronetBinaryUrl + fileName;
     print(downloadUrl);
-    final dProcess = await Process.start('curl',
-        ['-OL', downloadUrl],
+    final dProcess = await Process.start('curl', ['-OL', downloadUrl],
         mode: ProcessStartMode.inheritStdio);
     if (await dProcess.exitCode != 0) {
       throw Exception('Can\'t download. Check your network connection!');

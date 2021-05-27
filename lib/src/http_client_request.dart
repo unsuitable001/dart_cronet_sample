@@ -46,12 +46,15 @@ class HttpClientRequest {
   final Cronet _cronet;
   final Pointer<Cronet_Engine> _cronet_engine;
   final _CallbackHandler _cbh;
+  var mutable =
+      true; // We will not mutate params/headers after close or done call.
 
   /// Initiates a [HttpClientRequest]. It is meant to be used by
   /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance and
   /// a C pointer to [_cronet_engine].
   HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine)
-      : _cbh = _CallbackHandler(_cronet, _cronet_engine);
+      : _cbh = _CallbackHandler(
+            _cronet, _cronet_engine, _cronet.Create_Executor());
 
   /// This is one of the methods to get data out of [HttpClientRequest].
   /// Accepted callbacks are [RedirectReceivedCallback],
@@ -77,12 +80,18 @@ class HttpClientRequest {
   /// Consumable similar to [HttpClientResponse]
   Future<Stream<List<int>>> close() {
     return Future(() {
+      mutable = false;
       final request = _cronet.Cronet_UrlRequest_Create();
       final request_params = _cronet.Cronet_UrlRequestParams_Create();
       _cronet.Cronet_UrlRequestParams_http_method_set(
           request_params, _method.toNativeUtf8().cast<Int8>());
-      _cronet.Cronet_UrlRequest_Init(request, _cronet_engine,
-          _uri.toString().toNativeUtf8().cast<Int8>(), request_params);
+
+      _cronet.Cronet_UrlRequest_Init(
+          request,
+          _cronet_engine,
+          _uri.toString().toNativeUtf8().cast<Int8>(),
+          request_params,
+          _cbh.executor);
       _cronet.Cronet_UrlRequest_Start(request);
       _cbh.listen();
       return _cbh.stream;
@@ -101,7 +110,6 @@ class HttpClientRequest {
   /// If the [Stream] is closed, aborting has no effect.
   void abort([Object? exception, StackTrace? stackTrace]) {
     if (!_cbh._controller.isClosed) {
-      _cronet.Cronet_Engine_Shutdown(_cronet_engine);
       _cbh._controller.close().whenComplete(() {
         print(stackTrace ?? StackTrace.empty);
         if (exception is Exception) {
@@ -144,6 +152,7 @@ class _CallbackRequestMessage {
 class _CallbackHandler {
   final ReceivePort _receivePort = ReceivePort();
   final Cronet cronet;
+  final Pointer<Void> executor;
 
   /// Stream controller to allow consumption of data
   /// like [HttpClientResponse]
@@ -157,10 +166,15 @@ class _CallbackHandler {
   SuccessCallabck? _onSuccess;
 
   /// Registers the [NativePort] to the cronet side.
-  _CallbackHandler(this.cronet, Pointer<Cronet_Engine> engine) {
+  _CallbackHandler(this.cronet, Pointer<Cronet_Engine> engine, this.executor) {
     cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
-    _controller.done.whenComplete(() => cronet.Cronet_Engine_Shutdown(engine));
+    _controller.done.whenComplete(() => cronet.Destroy_Executor(executor));
   }
+
+  // void registerExecutor(Pointer<Void> executor) {
+  //   print('Executor: $executor');
+  //   cronet.registerHttpClientRequestExecutor(this, executor);
+  // }
 
   Stream<List<int>> get stream => _controller.stream;
 

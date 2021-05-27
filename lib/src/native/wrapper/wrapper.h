@@ -44,11 +44,16 @@ extern "C" {
 
 DART_EXPORT void registerCallbackHandler(Dart_Port nativePort);
 
-DART_EXPORT void dispatchCallback(char* methodname); // just for testing
+DART_EXPORT void dispatchCallback(char* methodname);
 
 DART_EXPORT intptr_t InitDartApiDL(void* data);
 
 DART_EXPORT void registerHttpClient(Dart_Handle h);
+
+typedef void* ExecutorPtr;
+
+DART_EXPORT ExecutorPtr Create_Executor();
+DART_EXPORT void Destroy_Executor(ExecutorPtr executor);
 
 /* typedefs, enums & struct declaration from cronet. Derived from cronet.idl_c.h */
 
@@ -287,7 +292,7 @@ CRONET_EXPORT
 Cronet_RESULT Cronet_UrlRequest_Read(Cronet_UrlRequestPtr self,
                                      Cronet_BufferPtr buffer);
 
-DART_EXPORT Cronet_RESULT Cronet_UrlRequest_Init(Cronet_UrlRequestPtr self, Cronet_EnginePtr engine, Cronet_String url, Cronet_UrlRequestParamsPtr params);
+DART_EXPORT Cronet_RESULT Cronet_UrlRequest_Init(Cronet_UrlRequestPtr self, Cronet_EnginePtr engine, Cronet_String url, Cronet_UrlRequestParamsPtr params, ExecutorPtr _executor);
 
 
 // Create an instance of Cronet_Buffer.

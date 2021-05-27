@@ -35,7 +35,6 @@ intptr_t InitDartApiDL(void* data) {
 // loading cronet
 LIBTYPE handle = OPENLIB(CRONET_LIB_NAME);
 Dart_Port _callback_port;
-SampleExecutor* executor = new SampleExecutor();
 Cronet_EnginePtr cronet_engine = NULL;
 
 static void FreeFinalizer(void*, void* value) {
@@ -147,9 +146,10 @@ P_IMPORT(Cronet_String, Cronet_Error_message_get, const Cronet_ErrorPtr);
 // void Cronet_Buffer_Destroy(Cronet_BufferPtr self) {_Cronet_Buffer_Destroy(self);}
 
 /* Engine Cleanup Tasks */
-static void RunFinalizer(void* isolate_callback_data,
+static void HttpClientDestroy(void* isolate_callback_data,
                          void* peer) {
-  delete executor;
+  std::cout << "Engine Destroy" << std::endl;
+  _Cronet_Engine_Shutdown(cronet_engine);
   _Cronet_Engine_Destroy(cronet_engine);
   CLOSELIB(handle);
 }
@@ -158,7 +158,7 @@ static void RunFinalizer(void* isolate_callback_data,
 void registerHttpClient(Dart_Handle h) {
   void* peer = 0x0;
   intptr_t size = 8;
-  Dart_NewFinalizableHandle_DL(h, peer, size, RunFinalizer);
+  Dart_NewFinalizableHandle_DL(h, peer, size, HttpClientDestroy);
 }
 
 /* URL Callbacks Implementations */
@@ -282,15 +282,23 @@ Cronet_RawDataPtr Cronet_Buffer_GetData(Cronet_BufferPtr buffer) {return _Cronet
 uint64_t Cronet_Buffer_GetSize(Cronet_BufferPtr self) {return _Cronet_Buffer_GetSize(self);}
 
 
+ExecutorPtr Create_Executor() {
+  SampleExecutor *exec = new SampleExecutor();
+  std::cout << "Exec Created: " << exec << std::endl;
+  return exec;
+}
 
+void Destroy_Executor(ExecutorPtr executor) {
+  delete reinterpret_cast<SampleExecutor*>(executor);
+}
 
 
 // NOTE: Changed from original cronet's api. executor & callback params aren't needed
-Cronet_RESULT Cronet_UrlRequest_Init(Cronet_UrlRequestPtr self, Cronet_EnginePtr engine, Cronet_String url, Cronet_UrlRequestParamsPtr params) {
+Cronet_RESULT Cronet_UrlRequest_Init(Cronet_UrlRequestPtr self, Cronet_EnginePtr engine, Cronet_String url, Cronet_UrlRequestParamsPtr params, ExecutorPtr _executor) {
+    SampleExecutor* executor = reinterpret_cast<SampleExecutor*>(_executor);
     executor->Init();
     Cronet_UrlRequestCallbackPtr urCallback = _Cronet_UrlRequestCallback_CreateWith(OnRedirectReceived, OnResponseStarted, OnReadCompleted,
         OnSucceeded, OnFailed, OnCanceled);
-    
     return _Cronet_UrlRequest_InitWithParams(self, engine, url, params, urCallback, executor->GetExecutor());
 
 } 

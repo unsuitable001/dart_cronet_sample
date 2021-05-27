@@ -71,6 +71,28 @@ class Cronet {
   late final _dart_registerHttpClient _registerHttpClient =
       _registerHttpClient_ptr.asFunction<_dart_registerHttpClient>();
 
+  ffi.Pointer<ffi.Void> Create_Executor() {
+    return _Create_Executor();
+  }
+
+  late final _Create_Executor_ptr =
+      _lookup<ffi.NativeFunction<_c_Create_Executor>>('Create_Executor');
+  late final _dart_Create_Executor _Create_Executor =
+      _Create_Executor_ptr.asFunction<_dart_Create_Executor>();
+
+  void Destroy_Executor(
+    ffi.Pointer<ffi.Void> executor,
+  ) {
+    return _Destroy_Executor(
+      executor,
+    );
+  }
+
+  late final _Destroy_Executor_ptr =
+      _lookup<ffi.NativeFunction<_c_Destroy_Executor>>('Destroy_Executor');
+  late final _dart_Destroy_Executor _Destroy_Executor =
+      _Destroy_Executor_ptr.asFunction<_dart_Destroy_Executor>();
+
   ffi.Pointer<Cronet_Engine> Cronet_Engine_Create() {
     return _Cronet_Engine_Create();
   }
@@ -346,12 +368,14 @@ class Cronet {
     ffi.Pointer<Cronet_Engine> engine,
     ffi.Pointer<ffi.Int8> url,
     ffi.Pointer<Cronet_UrlRequestParams> params,
+    ffi.Pointer<ffi.Void> _executor,
   ) {
     return _Cronet_UrlRequest_Init(
       self,
       engine,
       url,
       params,
+      _executor,
     );
   }
 
@@ -546,6 +570,10 @@ abstract class Cronet_UrlRequestStatusListener_Status {
   static const int Cronet_UrlRequestStatusListener_Status_READING_RESPONSE = 14;
 }
 
+const String CRONET_LIB_PREFIX = 'libcronet';
+
+const String CRONET_LIB_EXTENSION = '.so';
+
 typedef _c_registerCallbackHandler = ffi.Void Function(
   ffi.Int64 nativePort,
 );
@@ -576,6 +604,18 @@ typedef _c_registerHttpClient = ffi.Void Function(
 
 typedef _dart_registerHttpClient = void Function(
   Object h,
+);
+
+typedef _c_Create_Executor = ffi.Pointer<ffi.Void> Function();
+
+typedef _dart_Create_Executor = ffi.Pointer<ffi.Void> Function();
+
+typedef _c_Destroy_Executor = ffi.Void Function(
+  ffi.Pointer<ffi.Void> executor,
+);
+
+typedef _dart_Destroy_Executor = void Function(
+  ffi.Pointer<ffi.Void> executor,
 );
 
 typedef _c_Cronet_Engine_Create = ffi.Pointer<Cronet_Engine> Function();
@@ -731,6 +771,7 @@ typedef _c_Cronet_UrlRequest_Init = ffi.Int32 Function(
   ffi.Pointer<Cronet_Engine> engine,
   ffi.Pointer<ffi.Int8> url,
   ffi.Pointer<Cronet_UrlRequestParams> params,
+  ffi.Pointer<ffi.Void> _executor,
 );
 
 typedef _dart_Cronet_UrlRequest_Init = int Function(
@@ -738,6 +779,7 @@ typedef _dart_Cronet_UrlRequest_Init = int Function(
   ffi.Pointer<Cronet_Engine> engine,
   ffi.Pointer<ffi.Int8> url,
   ffi.Pointer<Cronet_UrlRequestParams> params,
+  ffi.Pointer<ffi.Void> _executor,
 );
 
 typedef _c_Cronet_Buffer_GetSize = ffi.Uint64 Function(
