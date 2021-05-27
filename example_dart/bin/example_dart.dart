@@ -7,7 +7,8 @@ void main(List<String> args) {
   final stopwatch = Stopwatch()..start();
 
   final client = HttpClient();
-  client
+  for(var i = 0; i < 3; i++) {  // Demo - with concurrent requests
+      client
       .getUrl(Uri.parse('http://info.cern.ch/'))
       .then((HttpClientRequest request) {
     /* The alternate API introduced.
@@ -25,5 +26,7 @@ void main(List<String> args) {
     },
         onDone: () => print(
             'cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms'));
-  });
+    });
+  }
+
 }

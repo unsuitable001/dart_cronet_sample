@@ -31,6 +31,7 @@ class _MyAppState extends State<MyApp> {
   void request() {
     setState(() {
       _fetching = true;
+      data = '';
     });
     client
         .getUrl(Uri.parse('http://info.cern.ch/'))

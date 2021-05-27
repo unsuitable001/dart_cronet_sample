@@ -53,15 +53,20 @@ void registerCallbackHandler(Dart_Port send_port) {_callback_port = send_port;}
 // This sends the callback name and the associated data
 // with it to the Dart side via NativePort
 //
-// Sent data is broken into 2 parts.
+// Sent data is broken into 3 parts.
 // message[0] is the method name, which is a string
-// message[1] contains all the data to pass to that method
-void dispatchCallback(const char* methodname, Dart_CObject args) {
+// message[1] is the request pointer, used to identify to which request this callback belongs to
+// message[2] contains all the data to pass to that method
+void dispatchCallback(const char* methodname,Cronet_UrlRequestPtr request , Dart_CObject args) {
   Dart_CObject c_method_name;
   c_method_name.type = Dart_CObject_kString;
   c_method_name.value.as_string = const_cast<char *>(methodname);
 
-  Dart_CObject* c_request_arr[] = {&c_method_name, &args};
+  Dart_CObject c_uuid;
+  c_uuid.type = Dart_CObject_kInt64;
+  c_uuid.value.as_int64 = (int64_t) request;
+
+  Dart_CObject* c_request_arr[] = {&c_method_name, &c_uuid, &args};
   Dart_CObject c_request;
 
   c_request.type = Dart_CObject_kArray;
@@ -75,7 +80,7 @@ void dispatchCallback(const char* methodname, Dart_CObject args) {
 // Builds the arguments to pass to the Dart side
 // as a parameter to the callbacks
 // Data processed here are
-// consumed as from message[1] if
+// consumed as from message[2] if
 // message is the name of the data
 // receieved by the ReceievePort
 Dart_CObject callbackArgBuilder(int num, ...) {
@@ -168,7 +173,7 @@ void OnRedirectReceived(
     Cronet_UrlRequestPtr request,
     Cronet_UrlResponseInfoPtr info,
     Cronet_String newLocationUrl) {
-    dispatchCallback("OnRedirectReceived", callbackArgBuilder(1, newLocationUrl));
+    dispatchCallback("OnRedirectReceived",request, callbackArgBuilder(1, newLocationUrl));
   Cronet_UrlRequest_FollowRedirect(request);
 }
 
@@ -181,7 +186,7 @@ void OnResponseStarted(
   Cronet_BufferPtr buffer = _Cronet_Buffer_Create();
   _Cronet_Buffer_InitWithAlloc(buffer, 32 * 1024);
 
-  dispatchCallback("OnResponseStarted", callbackArgBuilder(0));
+  dispatchCallback("OnResponseStarted",request, callbackArgBuilder(0));
 
   // Started reading the response.
   _Cronet_UrlRequest_Read(request, buffer);
@@ -195,14 +200,14 @@ void OnReadCompleted(
     Cronet_UrlResponseInfoPtr info,
     Cronet_BufferPtr buffer,
     uint64_t bytes_read) {
-    dispatchCallback("OnReadCompleted", callbackArgBuilder(4, request, info, buffer, bytes_read));
+    dispatchCallback("OnReadCompleted",request, callbackArgBuilder(4, request, info, buffer, bytes_read));
 }
 
 
 void OnSucceeded(Cronet_UrlRequestCallbackPtr self, Cronet_UrlRequestPtr request, Cronet_UrlResponseInfoPtr info) {
   printf("OnSucceeded");
   std::cout << "OnSucceeded called." << std::endl;
-  dispatchCallback("OnSucceeded", callbackArgBuilder(0));
+  dispatchCallback("OnSucceeded",request, callbackArgBuilder(0));
   std:: cout << "Info: Rcvd bytes " << _Cronet_UrlResponseInfo_received_byte_count_get(info) << std::endl;
 }
 
@@ -213,8 +218,7 @@ void OnFailed(
     Cronet_ErrorPtr error) {
       printf("OnFailed");
   printf("%s",_Cronet_Error_message_get(error));
-  dispatchCallback("OnFailed", callbackArgBuilder(1, error));
-//   last_error_message_ = Cronet_Error_message_get(error);
+  dispatchCallback("OnFailed",request, callbackArgBuilder(1, error));
 }
 
 void OnCanceled(
@@ -222,7 +226,7 @@ void OnCanceled(
     Cronet_UrlRequestPtr request,
     Cronet_UrlResponseInfoPtr info) {
       printf("OnCanceled");
-      dispatchCallback("OnFailed", callbackArgBuilder(0));
+      dispatchCallback("OnFailed",request, callbackArgBuilder(0));
 }
 
 
@@ -283,9 +287,7 @@ uint64_t Cronet_Buffer_GetSize(Cronet_BufferPtr self) {return _Cronet_Buffer_Get
 
 
 ExecutorPtr Create_Executor() {
-  SampleExecutor *exec = new SampleExecutor();
-  std::cout << "Exec Created: " << exec << std::endl;
-  return exec;
+  return new SampleExecutor();
 }
 
 void Destroy_Executor(ExecutorPtr executor) {

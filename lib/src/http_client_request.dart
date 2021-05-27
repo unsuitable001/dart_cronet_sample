@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:ffi';
-import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
@@ -52,9 +51,10 @@ class HttpClientRequest {
   /// Initiates a [HttpClientRequest]. It is meant to be used by
   /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance and
   /// a C pointer to [_cronet_engine].
-  HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine)
-      : _cbh = _CallbackHandler(
-            _cronet, _cronet_engine, _cronet.Create_Executor());
+  HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine,
+      Stream<dynamic> receivePortStream)
+      : _cbh = _CallbackHandler(_cronet, _cronet_engine,
+            _cronet.Create_Executor(), receivePortStream);
 
   /// This is one of the methods to get data out of [HttpClientRequest].
   /// Accepted callbacks are [RedirectReceivedCallback],
@@ -93,7 +93,7 @@ class HttpClientRequest {
           request_params,
           _cbh.executor);
       _cronet.Cronet_UrlRequest_Start(request);
-      _cbh.listen();
+      _cbh.listen(request);
       return _cbh.stream;
     });
   }
@@ -130,15 +130,16 @@ class HttpClientRequest {
 /// cronet and it's wrapper
 class _CallbackRequestMessage {
   final String method;
+  final int uuid;
   final Uint8List data;
 
-  /// Constructs [method] snd [data] from [message]
+  /// Constructs [method], [uuid] (url request pointer) and [data] from [message]
   factory _CallbackRequestMessage.fromCppMessage(List<dynamic> message) {
     return _CallbackRequestMessage._(
-        message[0] as String, message[1] as Uint8List);
+        message[0] as String, message[1] as int, message[2] as Uint8List);
   }
 
-  _CallbackRequestMessage._(this.method, this.data);
+  _CallbackRequestMessage._(this.method, this.uuid, this.data);
 
   @override
   String toString() => 'CppRequest(method: $method)';
@@ -148,9 +149,9 @@ class _CallbackRequestMessage {
 /// invoked by messages and data that are sent by
 /// [NativePort] from native cronet library.
 ///
-/// The associated [ReceivePort] is also initiated here.
+///
 class _CallbackHandler {
-  final ReceivePort _receivePort = ReceivePort();
+  final Stream<dynamic> _receivePortStream;
   final Cronet cronet;
   final Pointer<Void> executor;
 
@@ -166,15 +167,8 @@ class _CallbackHandler {
   SuccessCallabck? _onSuccess;
 
   /// Registers the [NativePort] to the cronet side.
-  _CallbackHandler(this.cronet, Pointer<Cronet_Engine> engine, this.executor) {
-    cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
-    _controller.done.whenComplete(() => cronet.Destroy_Executor(executor));
-  }
-
-  // void registerExecutor(Pointer<Void> executor) {
-  //   print('Executor: $executor');
-  //   cronet.registerHttpClientRequestExecutor(this, executor);
-  // }
+  _CallbackHandler(this.cronet, Pointer<Cronet_Engine> engine, this.executor,
+      this._receivePortStream);
 
   Stream<List<int>> get stream => _controller.stream;
 
@@ -208,15 +202,20 @@ class _CallbackHandler {
   ///
   /// This is also reponsible for providing a [Stream] of [int]
   /// to create a interface like [HttpClientResponse].
-  void listen() {
+  void listen(Pointer<Cronet_UrlRequest> reqPtr) {
     // registers the listener on the _receivePort.
     // The message parameter contains both the name of the event and
     // the data associated with it.
-    _receivePort.listen((dynamic message) {
+    StreamSubscription<dynamic>? streamSub;
+    streamSub = _receivePortStream.listen((dynamic message) {
       final reqMessage =
           _CallbackRequestMessage.fromCppMessage(message as List);
+      final uuid = reqMessage.uuid;
       Int64List args;
       args = reqMessage.data.buffer.asInt64List();
+      if (reqPtr.address != uuid) {
+        return;
+      }
       switch (reqMessage.method) {
         // Invoked when a redirect is received.
         // TODO: Need a way to control to follow the redirect or not
@@ -265,7 +264,7 @@ class _CallbackHandler {
 
             // invoke the callback
             if (_onReadData != null) {
-              _onReadData!(data, bytes_read,
+              _onReadData!(data.toList(growable: false), bytes_read,
                   () => cronet.Cronet_UrlRequest_Read(request, buffer));
             } else {
               // or, add data to the stream
@@ -279,7 +278,7 @@ class _CallbackHandler {
         // We will shut everything down after this.
         case 'OnFailed':
           {
-            _receivePort.close();
+            streamSub?.cancel();
             if (_onFailed != null) {
               _onFailed!();
             }
@@ -292,7 +291,7 @@ class _CallbackHandler {
         // We will shut everything down after this.
         case 'OnCanceled':
           {
-            _receivePort.close();
+            streamSub?.cancel();
             if (_onCanceled != null) {
               _onCanceled!();
             }
@@ -306,7 +305,7 @@ class _CallbackHandler {
         // We will shut everything down after this.
         case 'OnSucceeded':
           {
-            _receivePort.close();
+            streamSub?.cancel();
             if (_onSuccess != null) {
               _onSuccess!();
             }
@@ -317,7 +316,7 @@ class _CallbackHandler {
           break;
         default:
           {
-            throw ('Unimplemented Callback');
+            break;
           }
       }
     }, onError: (Object error) {

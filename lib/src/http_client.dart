@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 
@@ -37,6 +38,8 @@ class HttpClient {
   final String userAgent;
   final Pointer<Cronet_Engine> _cronet_engine;
   final bool quic;
+  final ReceivePort _receivePort = ReceivePort();
+  late Stream _receivePortBroadcast;
 
   /// Initiates a [HttpClient].
   ///
@@ -60,6 +63,14 @@ class HttpClient {
 
     _cronet.Cronet_Engine_StartWithParams(_cronet_engine, engine_params);
     _cronet.Cronet_EngineParams_Destroy(engine_params);
+
+    // Register the native port to C side
+    _cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
+    // Convert the recieve port stream to broadcast - for concurrent requests
+    _receivePortBroadcast =
+        _receivePort.asBroadcastStream(onCancel: (streamsub) {
+      streamsub.cancel();
+    });
   }
 
   /// Opens a [url] using a [method] like GET
@@ -67,7 +78,8 @@ class HttpClient {
   /// Returns a [Future] of [HttpClientRequest].
   Future<HttpClientRequest> openUrl(String method, Uri url) {
     return Future(() {
-      return HttpClientRequest(url, method, _cronet, _cronet_engine);
+      return HttpClientRequest(
+          url, method, _cronet, _cronet_engine, _receivePortBroadcast);
     });
   }
 
