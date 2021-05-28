@@ -112,14 +112,31 @@ P_IMPORT(Cronet_EnginePtr,Cronet_Engine_Create , void);
 P_IMPORT(void, Cronet_Engine_Destroy, Cronet_EnginePtr);
 P_IMPORT(Cronet_RESULT, Cronet_Engine_Shutdown, Cronet_EnginePtr);
 P_IMPORT(Cronet_String, Cronet_Engine_GetVersionString, Cronet_EnginePtr);
+
 P_IMPORT(Cronet_EngineParamsPtr, Cronet_EngineParams_Create, void);
 P_IMPORT(void, Cronet_EngineParams_Destroy, Cronet_EngineParamsPtr);
+
+P_IMPORT(Cronet_QuicHintPtr,Cronet_QuicHint_Create, void);
+P_IMPORT(void, Cronet_QuicHint_Destroy, Cronet_QuicHintPtr);
+P_IMPORT(void, Cronet_QuicHint_host_set, Cronet_QuicHintPtr self, const Cronet_String host);
+P_IMPORT(void, Cronet_QuicHint_port_set, Cronet_QuicHintPtr self, const int32_t port);
+P_IMPORT(void, Cronet_QuicHint_alternate_port_set, Cronet_QuicHintPtr self, const int32_t alternate_port);
+
 P_IMPORT(void, Cronet_EngineParams_enable_check_result_set, Cronet_EngineParamsPtr, const bool);
 P_IMPORT(void, Cronet_EngineParams_user_agent_set, Cronet_EngineParamsPtr, const Cronet_String);
 P_IMPORT(void, Cronet_EngineParams_enable_quic_set, Cronet_EngineParamsPtr, const bool);
+P_IMPORT(void, Cronet_EngineParams_quic_hints_add, Cronet_EngineParamsPtr self,const Cronet_QuicHintPtr element);
+P_IMPORT(void, Cronet_EngineParams_enable_http2_set, Cronet_EngineParamsPtr, const bool);
+P_IMPORT(void, Cronet_EngineParams_enable_brotli_set, Cronet_EngineParamsPtr, const bool);
+P_IMPORT(void, Cronet_EngineParams_accept_language_set, Cronet_EngineParamsPtr, const Cronet_String);
+P_IMPORT(void, Cronet_EngineParams_http_cache_mode_set, Cronet_EngineParamsPtr, const Cronet_EngineParams_HTTP_CACHE_MODE http_cache_mode);
+P_IMPORT(void, Cronet_EngineParams_http_cache_max_size_set, Cronet_EngineParamsPtr, const int64_t http_cache_max_size);
+P_IMPORT(void, Cronet_EngineParams_storage_path_set, Cronet_EngineParamsPtr, const Cronet_String storage_path);
+
 P_IMPORT(Cronet_RESULT, Cronet_Engine_StartWithParams, Cronet_EnginePtr, Cronet_EngineParamsPtr);
 P_IMPORT(Cronet_UrlRequestPtr, Cronet_UrlRequest_Create, void);
 P_IMPORT(void, Cronet_UrlRequest_Destroy, Cronet_UrlRequestPtr);
+P_IMPORT(void, Cronet_UrlRequest_Cancel, Cronet_UrlRequestPtr);
 P_IMPORT(void, Cronet_UrlRequest_SetClientContext, Cronet_UrlRequestPtr, Cronet_ClientContext);
 P_IMPORT(Cronet_ClientContext, Cronet_UrlRequest_GetClientContext, Cronet_UrlRequestPtr);
 P_IMPORT(Cronet_UrlRequestParamsPtr, Cronet_UrlRequestParams_Create, void);
@@ -258,11 +275,70 @@ void Cronet_EngineParams_enable_check_result_set(
     Cronet_EngineParamsPtr self,
     const bool enable_check_result) {return _Cronet_EngineParams_enable_check_result_set(self,enable_check_result);}
 
+Cronet_QuicHintPtr Cronet_QuicHint_Create(void) {
+  return _Cronet_QuicHint_Create();
+}
+
+void Cronet_QuicHint_Destroy(Cronet_QuicHintPtr self) {
+  return _Cronet_QuicHint_Destroy(self);
+}
+
+void Cronet_QuicHint_host_set(Cronet_QuicHintPtr self,
+                              const Cronet_String host) {
+  return _Cronet_QuicHint_host_set(self, host);
+}
+
+void Cronet_QuicHint_port_set(Cronet_QuicHintPtr self, const int32_t port) {
+  return _Cronet_QuicHint_port_set(self, port);
+}
+
+void Cronet_QuicHint_alternate_port_set(Cronet_QuicHintPtr self,
+                                        const int32_t alternate_port) {
+  return _Cronet_QuicHint_alternate_port_set(self, alternate_port);
+}
+
 void Cronet_EngineParams_user_agent_set(Cronet_EngineParamsPtr self,
                                         const Cronet_String user_agent){_Cronet_EngineParams_user_agent_set(self, user_agent);}
 
 void Cronet_EngineParams_enable_quic_set(Cronet_EngineParamsPtr self,
                                          const bool enable_quic){_Cronet_EngineParams_enable_quic_set(self,enable_quic);}
+
+void Cronet_EngineParams_accept_language_set(
+    Cronet_EngineParamsPtr self,
+    const Cronet_String accept_language) {return _Cronet_EngineParams_accept_language_set(self, accept_language);}
+
+void Cronet_EngineParams_storage_path_set(Cronet_EngineParamsPtr self,
+                                          const Cronet_String storage_path) {
+  return _Cronet_EngineParams_storage_path_set(self, storage_path);
+}
+
+void Cronet_EngineParams_enable_http2_set(Cronet_EngineParamsPtr self,
+                                          const bool enable_http2) {
+  return _Cronet_EngineParams_enable_http2_set(self, enable_http2);
+}
+
+void Cronet_EngineParams_quic_hints_add(Cronet_EngineParamsPtr self,
+                                    const Cronet_QuicHintPtr element) {
+  return _Cronet_EngineParams_quic_hints_add(self, element);
+
+}
+
+void Cronet_EngineParams_enable_brotli_set(Cronet_EngineParamsPtr self,
+                                           const bool enable_brotli) {
+  return _Cronet_EngineParams_enable_brotli_set(self, enable_brotli);
+}
+
+void Cronet_EngineParams_http_cache_mode_set(
+    Cronet_EngineParamsPtr self,
+    const Cronet_EngineParams_HTTP_CACHE_MODE http_cache_mode) {
+      return _Cronet_EngineParams_http_cache_mode_set(self, http_cache_mode);
+    }
+
+void Cronet_EngineParams_http_cache_max_size_set(
+    Cronet_EngineParamsPtr self,
+    const int64_t http_cache_max_size) {
+  return _Cronet_EngineParams_http_cache_max_size_set(self, http_cache_max_size);
+}
 
 Cronet_RESULT Cronet_Engine_StartWithParams(Cronet_EnginePtr self,
                                             Cronet_EngineParamsPtr params) {return _Cronet_Engine_StartWithParams(self, params);}
@@ -270,6 +346,7 @@ Cronet_RESULT Cronet_Engine_StartWithParams(Cronet_EnginePtr self,
 Cronet_UrlRequestPtr Cronet_UrlRequest_Create(void) {return _Cronet_UrlRequest_Create();}
 
 void Cronet_UrlRequest_Destroy(Cronet_UrlRequestPtr self) {return _Cronet_UrlRequest_Destroy(self);}
+void Cronet_UrlRequest_Cancel(Cronet_UrlRequestPtr self) {return _Cronet_UrlRequest_Cancel(self);}
 
 void Cronet_UrlRequest_SetClientContext(Cronet_UrlRequestPtr self, Cronet_ClientContext client_context) {return _Cronet_UrlRequest_SetClientContext(self, client_context);}
 Cronet_ClientContext Cronet_UrlRequest_GetClientContext(Cronet_UrlRequestPtr self) {return _Cronet_UrlRequest_GetClientContext(self);}

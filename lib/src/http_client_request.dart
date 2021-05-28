@@ -45,8 +45,9 @@ class HttpClientRequest {
   final Cronet _cronet;
   final Pointer<Cronet_Engine> _cronet_engine;
   final _CallbackHandler _cbh;
-  var mutable =
-      true; // We will not mutate params/headers after close or done call.
+  final Pointer<Cronet_UrlRequest> _request;
+  // var _mutable =
+  //     true; // We will not mutate params/headers after close or done call.
 
   /// Initiates a [HttpClientRequest]. It is meant to be used by
   /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance and
@@ -54,7 +55,8 @@ class HttpClientRequest {
   HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine,
       Stream<dynamic> receivePortStream)
       : _cbh = _CallbackHandler(_cronet, _cronet_engine,
-            _cronet.Create_Executor(), receivePortStream);
+            _cronet.Create_Executor(), receivePortStream),
+        _request = _cronet.Cronet_UrlRequest_Create();
 
   /// This is one of the methods to get data out of [HttpClientRequest].
   /// Accepted callbacks are [RedirectReceivedCallback],
@@ -73,6 +75,13 @@ class HttpClientRequest {
         onFailed, onCanceled, onSuccess);
   }
 
+  /// Cancels the ongoing url request
+  ///
+  /// Url Request event listners will get a cancel event
+  void cancel() {
+    _cronet.Cronet_UrlRequest_Cancel(_request);
+  }
+
   /// Returns the [Stream] responsible for
   /// emitting data received from the server
   /// by cronet.
@@ -80,20 +89,20 @@ class HttpClientRequest {
   /// Consumable similar to [HttpClientResponse]
   Future<Stream<List<int>>> close() {
     return Future(() {
-      mutable = false;
-      final request = _cronet.Cronet_UrlRequest_Create();
+      // _mutable = false;
+      // final request = _cronet.Cronet_UrlRequest_Create();
       final request_params = _cronet.Cronet_UrlRequestParams_Create();
       _cronet.Cronet_UrlRequestParams_http_method_set(
           request_params, _method.toNativeUtf8().cast<Int8>());
 
       _cronet.Cronet_UrlRequest_Init(
-          request,
+          _request,
           _cronet_engine,
           _uri.toString().toNativeUtf8().cast<Int8>(),
           request_params,
           _cbh.executor);
-      _cronet.Cronet_UrlRequest_Start(request);
-      _cbh.listen(request);
+      _cronet.Cronet_UrlRequest_Start(_request);
+      _cbh.listen(_request);
       return _cbh.stream;
     });
   }
@@ -213,6 +222,13 @@ class _CallbackHandler {
       final uuid = reqMessage.uuid;
       Int64List args;
       args = reqMessage.data.buffer.asInt64List();
+
+      // If http client is requested to force stop
+      if (reqMessage.method == 'force_close') {
+        cronet.Cronet_UrlRequest_Cancel(reqPtr);
+      }
+
+      // If the message isn't meant for this request
       if (reqPtr.address != uuid) {
         return;
       }

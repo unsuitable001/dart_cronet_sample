@@ -212,6 +212,22 @@ typedef enum Cronet_UrlRequestStatusListener_Status {
 NOTE: Some are modified if required for wrapping */
 
 
+///////////////////////
+// Struct Cronet_QuicHint.
+CRONET_EXPORT Cronet_QuicHintPtr Cronet_QuicHint_Create(void);
+CRONET_EXPORT void Cronet_QuicHint_Destroy(Cronet_QuicHintPtr self);
+// Cronet_QuicHint setters.
+CRONET_EXPORT
+void Cronet_QuicHint_host_set(Cronet_QuicHintPtr self,
+                              const Cronet_String host);
+CRONET_EXPORT
+void Cronet_QuicHint_port_set(Cronet_QuicHintPtr self, const int32_t port);
+CRONET_EXPORT
+void Cronet_QuicHint_alternate_port_set(Cronet_QuicHintPtr self,
+                                        const int32_t alternate_port);
+
+
+
 CRONET_EXPORT Cronet_EnginePtr Cronet_Engine_Create(void);
 
 CRONET_EXPORT Cronet_String Cronet_Engine_GetVersionString(Cronet_EnginePtr self);
@@ -220,16 +236,40 @@ CRONET_EXPORT Cronet_EngineParamsPtr Cronet_EngineParams_Create(void);
 CRONET_EXPORT void Cronet_EngineParams_Destroy(Cronet_EngineParamsPtr self);
 
 CRONET_EXPORT
-void Cronet_EngineParams_enable_check_result_set(
-    Cronet_EngineParamsPtr self,
-    const bool enable_check_result);
-CRONET_EXPORT
 void Cronet_EngineParams_user_agent_set(Cronet_EngineParamsPtr self,
                                         const Cronet_String user_agent);
 
 CRONET_EXPORT
 void Cronet_EngineParams_enable_quic_set(Cronet_EngineParamsPtr self,
                                          const bool enable_quic);
+
+CRONET_EXPORT
+void Cronet_EngineParams_quic_hints_add(Cronet_EngineParamsPtr self,
+                                        const Cronet_QuicHintPtr element);
+
+CRONET_EXPORT
+void Cronet_EngineParams_accept_language_set(
+    Cronet_EngineParamsPtr self,
+    const Cronet_String accept_language);
+
+CRONET_EXPORT
+void Cronet_EngineParams_storage_path_set(Cronet_EngineParamsPtr self,
+                                          const Cronet_String storage_path);
+
+CRONET_EXPORT
+void Cronet_EngineParams_enable_http2_set(Cronet_EngineParamsPtr self,
+                                          const bool enable_http2);
+CRONET_EXPORT
+void Cronet_EngineParams_enable_brotli_set(Cronet_EngineParamsPtr self,
+                                           const bool enable_brotli);
+CRONET_EXPORT
+void Cronet_EngineParams_http_cache_mode_set(
+    Cronet_EngineParamsPtr self,
+    const Cronet_EngineParams_HTTP_CACHE_MODE http_cache_mode);
+CRONET_EXPORT
+void Cronet_EngineParams_http_cache_max_size_set(
+    Cronet_EngineParamsPtr self,
+    const int64_t http_cache_max_size);
                                     
 CRONET_EXPORT
 Cronet_RESULT Cronet_Engine_StartWithParams(Cronet_EnginePtr self,
@@ -271,6 +311,8 @@ typedef void (*Cronet_UrlRequestCallback_OnCanceledFunc)(
 CRONET_EXPORT Cronet_UrlRequestPtr Cronet_UrlRequest_Create(void);
 // Destroy an instance of Cronet_UrlRequest.
 CRONET_EXPORT void Cronet_UrlRequest_Destroy(Cronet_UrlRequestPtr self);
+
+CRONET_EXPORT void Cronet_UrlRequest_Cancel(Cronet_UrlRequestPtr self);
 // Set and get app-specific Cronet_ClientContext.
 CRONET_EXPORT void Cronet_UrlRequest_SetClientContext(
     Cronet_UrlRequestPtr self,
