@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
@@ -39,13 +41,16 @@ typedef SuccessCallabck = void Function();
 ///
 ///
 /// TODO: Implement other functions
-class HttpClientRequest {
+class HttpClientRequest implements IOSink {
   final Uri _uri;
   final String _method;
   final Cronet _cronet;
   final Pointer<Cronet_Engine> _cronet_engine;
   final _CallbackHandler _cbh;
   final Pointer<Cronet_UrlRequest> _request;
+
+  @override
+  Encoding encoding;
   // var _mutable =
   //     true; // We will not mutate params/headers after close or done call.
 
@@ -53,7 +58,8 @@ class HttpClientRequest {
   /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance and
   /// a C pointer to [_cronet_engine].
   HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine,
-      Stream<dynamic> receivePortStream)
+      Stream<dynamic> receivePortStream,
+      {this.encoding = utf8})
       : _cbh = _CallbackHandler(_cronet, _cronet_engine,
             _cronet.Create_Executor(), receivePortStream),
         _request = _cronet.Cronet_UrlRequest_Create();
@@ -87,6 +93,7 @@ class HttpClientRequest {
   /// by cronet.
   ///
   /// Consumable similar to [HttpClientResponse]
+  @override
   Future<Stream<List<int>>> close() {
     return Future(() {
       // _mutable = false;
@@ -132,7 +139,66 @@ class HttpClientRequest {
   /// Analogus to [HttpClientResponse].
   ///
   /// If an error occurs before the response is available, this future will complete with an error.
+  @override
   Future<Stream<List<int>>> get done => close();
+
+  @override
+  void add(List<int> data) {
+    _cbh._controller.sink.add(data);
+  }
+
+  @override
+  void addError(Object error, [StackTrace? stackTrace]) {
+    _cbh._controller.sink.addError(error, stackTrace);
+  }
+
+  @override
+  Future addStream(Stream<List<int>> stream) {
+    return _cbh._controller.sink.addStream(stream);
+  }
+
+  @override
+  Future flush() {
+    return _cbh._controller.close().whenComplete(() => null);
+  }
+
+  @override
+  void write(Object? object) {
+    final string = '$object';
+    if (string.isEmpty) return;
+    add(encoding.encode(string));
+  }
+
+  @override
+  void writeAll(Iterable objects, [String separator = '']) {
+    final iterator = objects.iterator;
+    if (!iterator.moveNext()) return;
+    if (separator.isEmpty) {
+      do {
+        write(iterator.current);
+      } while (iterator.moveNext());
+    } else {
+      write(iterator.current);
+      while (iterator.moveNext()) {
+        write(separator);
+        write(iterator.current);
+      }
+    }
+  }
+
+  @override
+  void writeCharCode(int charCode) {
+    write(String.fromCharCode(charCode));
+  }
+
+  @override
+  void writeln([Object? object = '']) {
+    write(object);
+    write('\n');
+  }
+
+  /// The uri of the request.
+  Uri get uri => _uri;
 }
 
 /// Deserializes the message sent by
