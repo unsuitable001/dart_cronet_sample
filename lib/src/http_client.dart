@@ -54,6 +54,9 @@ class HttpClient {
 
   Directory? dir;
 
+  static const int defaultHttpPort = 80;
+  static const int defaultHttpsPort = 443;
+
   /// Initiates a [HttpClient].
   ///
   /// An optional parameters -
@@ -161,7 +164,18 @@ class HttpClient {
     }
   }
 
-  /// Opens a [url] using a [method] like GET
+  Uri _getUri(String host, int port, String path) {
+    final _host = Uri.parse(host);
+    if (!_host.hasScheme) {
+      final scheme = (_host.port == defaultHttpsPort) ? 'https://' : 'http://';
+      return Uri(scheme: scheme, host: _host.host, port: port, path: path);
+    } else {
+      return Uri(
+          scheme: _host.scheme, host: _host.host, port: port, path: path);
+    }
+  }
+
+  /// Opens a [url] using a [method] like GET, PUT, POST, HEAD, PATCH, DELETE.
   ///
   /// Returns a [Future] of [HttpClientRequest].
   Future<HttpClientRequest> openUrl(String method, Uri url) {
@@ -174,16 +188,12 @@ class HttpClient {
     });
   }
 
-  /// Opens a request on the basis of [host], [port] and [path] using GET method/
+  /// Opens a request on the basis of [method], [host], [port] and [path] using GET, PUT, POST, HEAD, PATCH, DELETE method
   ///
   /// Returns a [Future] of [HttpClientRequest].
-  Future<HttpClientRequest> get(String host, int port, String path) {
-    final _host = Uri.parse(host);
-    if (!_host.hasScheme) {
-      throw Exception('Scheme not mentioned! $host');
-    }
-    return getUrl(
-        Uri(scheme: _host.scheme, host: _host.host, port: port, path: path));
+  Future<HttpClientRequest> open(
+      String method, String host, int port, String path) {
+    return openUrl(method, _getUri(host, port, path));
   }
 
   /// Opens a [url] using GET method.
@@ -191,6 +201,83 @@ class HttpClient {
   /// Returns a [Future] of [HttpClientRequest].
   Future<HttpClientRequest> getUrl(Uri url) {
     return openUrl('GET', url);
+  }
+
+  /// Opens a request on the basis of [host], [port] and [path] using GET method
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> get(String host, int port, String path) {
+    return getUrl(_getUri(host, port, path));
+  }
+
+  /// Opens a [url] using HEAD method.
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> headUrl(Uri url) {
+    return openUrl('HEAD', url);
+  }
+
+  /// Opens a request on the basis of [host], [port] and [path] using HEAD method
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> head(String host, int port, String path) {
+    return headUrl(_getUri(host, port, path));
+  }
+
+  /// Opens a [url] using PUT method.
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> putUrl(Uri url) {
+    return openUrl('PUT', url);
+  }
+
+  /// Opens a request on the basis of [host], [port] and [path] using PUT method
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> put(String host, int port, String path) {
+    return putUrl(_getUri(host, port, path));
+  }
+
+  /// Opens a [url] using POST method.
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> postUrl(Uri url) {
+    return openUrl('POST', url);
+  }
+
+  /// Opens a request on the basis of [host], [port] and [path] using POST method
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> post(String host, int port, String path) {
+    return postUrl(_getUri(host, port, path));
+  }
+
+  /// Opens a [url] using PATCH method.
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> patchUrl(Uri url) {
+    return openUrl('PATCH', url);
+  }
+
+  /// Opens a request on the basis of [host], [port] and [path] using PATCH method
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> patch(String host, int port, String path) {
+    return patchUrl(_getUri(host, port, path));
+  }
+
+  /// Opens a [url] using DELETE method.
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> deleteUrl(Uri url) {
+    return openUrl('DELETE', url);
+  }
+
+  /// Opens a request on the basis of [host], [port] and [path] using DELETE method
+  ///
+  /// Returns a [Future] of [HttpClientRequest].
+  Future<HttpClientRequest> delete(String host, int port, String path) {
+    return deleteUrl(_getUri(host, port, path));
   }
 
   /// Gets Cronet's version
