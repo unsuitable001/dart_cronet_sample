@@ -348,6 +348,12 @@ DART_EXPORT Cronet_RESULT Cronet_UrlRequest_Init(Cronet_UrlRequestPtr self, Cron
 CRONET_EXPORT uint64_t Cronet_Buffer_GetSize(Cronet_BufferPtr self);
 CRONET_EXPORT Cronet_RawDataPtr Cronet_Buffer_GetData(Cronet_BufferPtr self);
 
+CRONET_EXPORT
+bool Cronet_Engine_StartNetLogToFile(Cronet_EnginePtr self,
+                                     Cronet_String file_name,
+                                     bool log_all);
+CRONET_EXPORT
+void Cronet_Engine_StopNetLog(Cronet_EnginePtr self);
 
 // CRONET_EXPORT
 // Cronet_String Cronet_Error_message_get(const Cronet_ErrorPtr self);

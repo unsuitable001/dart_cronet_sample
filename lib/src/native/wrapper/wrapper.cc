@@ -165,7 +165,16 @@ P_IMPORT(Cronet_RawDataPtr, Cronet_Buffer_GetData, Cronet_BufferPtr);
 P_IMPORT(int64_t, Cronet_UrlResponseInfo_received_byte_count_get, Cronet_UrlResponseInfoPtr);
 P_IMPORT(Cronet_String, Cronet_Error_message_get, const Cronet_ErrorPtr);
 
-// void Cronet_Buffer_Destroy(Cronet_BufferPtr self) {_Cronet_Buffer_Destroy(self);}
+P_IMPORT(bool, Cronet_Engine_StartNetLogToFile, Cronet_EnginePtr self,Cronet_String file_name,bool log_all);
+P_IMPORT(void, Cronet_Engine_StopNetLog,Cronet_EnginePtr self);
+
+bool Cronet_Engine_StartNetLogToFile(Cronet_EnginePtr self,
+                                     Cronet_String file_name,
+                                     bool log_all) {
+  return _Cronet_Engine_StartNetLogToFile(self, file_name, true);
+}
+
+void Cronet_Engine_StopNetLog(Cronet_EnginePtr self) {return _Cronet_Engine_StopNetLog(self);}
 
 /* Engine Cleanup Tasks */
 static void HttpClientDestroy(void* isolate_callback_data,

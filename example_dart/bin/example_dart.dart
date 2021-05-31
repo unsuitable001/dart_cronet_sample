@@ -6,6 +6,8 @@ import 'package:cronet_sample/cronet_sample.dart';
 void main(List<String> args) {
   final stopwatch = Stopwatch()..start();
   final client = HttpClient();
+  client.enableTimelineLogging = true;
+  print('Log File: ${client.logUri.path}');
   for (var i = 0; i < 3; i++) {
     // Demo - with concurrent requests
     client

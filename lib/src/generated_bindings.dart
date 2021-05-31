@@ -612,6 +612,41 @@ class Cronet {
           'Cronet_Buffer_GetData');
   late final _dart_Cronet_Buffer_GetData _Cronet_Buffer_GetData =
       _Cronet_Buffer_GetData_ptr.asFunction<_dart_Cronet_Buffer_GetData>();
+
+  bool Cronet_Engine_StartNetLogToFile(
+    ffi.Pointer<Cronet_Engine> self,
+    ffi.Pointer<ffi.Int8> file_name,
+    bool log_all,
+  ) {
+    return _Cronet_Engine_StartNetLogToFile(
+          self,
+          file_name,
+          log_all ? 1 : 0,
+        ) !=
+        0;
+  }
+
+  late final _Cronet_Engine_StartNetLogToFile_ptr =
+      _lookup<ffi.NativeFunction<_c_Cronet_Engine_StartNetLogToFile>>(
+          'Cronet_Engine_StartNetLogToFile');
+  late final _dart_Cronet_Engine_StartNetLogToFile
+      _Cronet_Engine_StartNetLogToFile = _Cronet_Engine_StartNetLogToFile_ptr
+          .asFunction<_dart_Cronet_Engine_StartNetLogToFile>();
+
+  void Cronet_Engine_StopNetLog(
+    ffi.Pointer<Cronet_Engine> self,
+  ) {
+    return _Cronet_Engine_StopNetLog(
+      self,
+    );
+  }
+
+  late final _Cronet_Engine_StopNetLog_ptr =
+      _lookup<ffi.NativeFunction<_c_Cronet_Engine_StopNetLog>>(
+          'Cronet_Engine_StopNetLog');
+  late final _dart_Cronet_Engine_StopNetLog _Cronet_Engine_StopNetLog =
+      _Cronet_Engine_StopNetLog_ptr.asFunction<
+          _dart_Cronet_Engine_StopNetLog>();
 }
 
 class Cronet_Buffer extends ffi.Opaque {}
@@ -1106,4 +1141,24 @@ typedef _c_Cronet_Buffer_GetData = ffi.Pointer<ffi.Void> Function(
 
 typedef _dart_Cronet_Buffer_GetData = ffi.Pointer<ffi.Void> Function(
   ffi.Pointer<Cronet_Buffer> self,
+);
+
+typedef _c_Cronet_Engine_StartNetLogToFile = ffi.Uint8 Function(
+  ffi.Pointer<Cronet_Engine> self,
+  ffi.Pointer<ffi.Int8> file_name,
+  ffi.Uint8 log_all,
+);
+
+typedef _dart_Cronet_Engine_StartNetLogToFile = int Function(
+  ffi.Pointer<Cronet_Engine> self,
+  ffi.Pointer<ffi.Int8> file_name,
+  int log_all,
+);
+
+typedef _c_Cronet_Engine_StopNetLog = ffi.Void Function(
+  ffi.Pointer<Cronet_Engine> self,
+);
+
+typedef _dart_Cronet_Engine_StopNetLog = void Function(
+  ffi.Pointer<Cronet_Engine> self,
 );

@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:ffi';
-import 'dart:io';
+import 'dart:io' as io;
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:cronet_sample/src/exceptions.dart';
 import 'package:ffi/ffi.dart';
 
 import 'dylib_handler.dart';
@@ -47,12 +48,16 @@ class HttpClient {
   final int? maxCache;
   final List<QuicHint>? quicHints;
 
+  var _enableTimelineLogging = false;
+  final _loggingFile =
+      io.Directory.systemTemp.createTempSync().uri.resolve('netlog.json');
+
   final Pointer<Cronet_Engine> _cronet_engine;
   final ReceivePort _receivePort = ReceivePort();
   late Stream _receivePortBroadcast;
   var _stop = false;
 
-  Directory? dir;
+  io.Directory? dir;
 
   static const int defaultHttpPort = 80;
   static const int defaultHttpsPort = 443;
@@ -112,7 +117,7 @@ class HttpClient {
     switch (cacheMode) {
       case CacheMode.disk:
       case CacheMode.disk_no_http:
-        dir = Directory.systemTemp.createTempSync();
+        dir = io.Directory.systemTemp.createTempSync();
         _cronet.Cronet_EngineParams_storage_path_set(
             engine_params, dir!.path.toNativeUtf8().cast<Int8>());
         break;
@@ -278,6 +283,37 @@ class HttpClient {
   /// Returns a [Future] of [HttpClientRequest].
   Future<HttpClientRequest> delete(String host, int port, String path) {
     return deleteUrl(_getUri(host, port, path));
+  }
+
+  bool get enableTimelineLogging => _enableTimelineLogging;
+
+  /// Enables logging. May content sensitive content.
+  /// Path of the log can be get from [logUri].
+  ///
+  /// If logging can't be started, then a [LoggingException] will be thrown
+  set enableTimelineLogging(bool enable) {
+    io.File.fromUri(_loggingFile).createSync();
+    if (enable) {
+      if (!_cronet.Cronet_Engine_StartNetLogToFile(_cronet_engine,
+          _loggingFile.path.toNativeUtf8().cast<Int8>(), true)) {
+        throw LoggingException();
+      }
+    } else {
+      _cronet.Cronet_Engine_StopNetLog(_cronet_engine);
+    }
+    _enableTimelineLogging = enable;
+  }
+
+  /// get Uri to the log file
+  Uri get logUri => _loggingFile;
+
+  /// Function for resolving the proxy server to be used for a HTTP connection from the proxy configuration specified through environment variables.
+  ///
+  /// Note: It just returns [io.HttpClient.findProxyFromEnvironment].
+  static String findProxyFromEnvironment(Uri url,
+      {Map<String, String>? environment}) {
+    return io.HttpClient.findProxyFromEnvironment(url,
+        environment: environment);
   }
 
   /// Gets Cronet's version

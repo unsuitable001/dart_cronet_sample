@@ -116,6 +116,7 @@ From the root of the repo, run
 
 ```bash
 cd example
+flutter pub run cronet_sample <platform>
 flutter run
 ```
 
@@ -123,5 +124,7 @@ or
 
 ```bash
 cd example_dart
+pub run cronet_sample <platform>
 dart run
 ```
+replace `<platform>` with `linux64`, `windows64` or `androidarm64-v8a`
