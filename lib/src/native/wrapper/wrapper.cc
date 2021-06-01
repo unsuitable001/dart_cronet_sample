@@ -200,7 +200,6 @@ void OnRedirectReceived(
     Cronet_UrlResponseInfoPtr info,
     Cronet_String newLocationUrl) {
     dispatchCallback("OnRedirectReceived",request, callbackArgBuilder(1, newLocationUrl));
-  Cronet_UrlRequest_FollowRedirect(request);
 }
 
 void OnResponseStarted(

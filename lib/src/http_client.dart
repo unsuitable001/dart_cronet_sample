@@ -151,6 +151,10 @@ class HttpClient {
         streamsub.cancel();
         _receivePort.close();
         dir?.deleteSync(recursive: true);
+        // if the folder is empty, delete it.
+        if (!io.File.fromUri(_loggingFile).existsSync()) {
+          io.File.fromUri(_loggingFile).parent.deleteSync();
+        }
       } else {
         streamsub.pause();
       }

@@ -197,6 +197,19 @@ class HttpClientRequest implements IOSink {
     write('\n');
   }
 
+  /// Follow the redirects
+  bool get followRedirects => _cbh.followRedirects;
+  set followRedirects(bool follow) {
+    _cbh.followRedirects = follow;
+  }
+
+  /// Maximum numbers of redirects to follow.
+  /// Have no effect if [followRedirects] is set to false.
+  int get maxRedirects => _cbh.maxRedirects;
+  set maxRedirects(int redirects) {
+    _cbh.maxRedirects = redirects;
+  }
+
   /// The uri of the request.
   Uri get uri => _uri;
 }
@@ -229,6 +242,10 @@ class _CallbackHandler {
   final Stream<dynamic> _receivePortStream;
   final Cronet cronet;
   final Pointer<Void> executor;
+
+  // These are a part of HttpClientRequest Public API
+  var followRedirects = true;
+  var maxRedirects = 5;
 
   /// Stream controller to allow consumption of data
   /// like [HttpClientResponse]
@@ -300,12 +317,17 @@ class _CallbackHandler {
       }
       switch (reqMessage.method) {
         // Invoked when a redirect is received.
-        // TODO: Need a way to control to follow the redirect or not
         // Currently: Passes the new location's url as parameter.
         case 'OnRedirectReceived':
           {
             print(
                 'New Location: ${Pointer.fromAddress(args[0]).cast<Utf8>().toDartString()}');
+            if (followRedirects && maxRedirects > 0) {
+              cronet.Cronet_UrlRequest_FollowRedirect(reqPtr);
+              maxRedirects--;
+            } else {
+              cronet.Cronet_UrlRequest_Cancel(reqPtr);
+            }
             if (_onRedirectReceived != null) {
               _onRedirectReceived!(
                   Pointer.fromAddress(args[0]).cast<Utf8>().toDartString());
