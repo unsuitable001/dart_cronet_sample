@@ -518,6 +518,24 @@ class Cronet {
       _Cronet_UrlRequestParams_http_method_set_ptr.asFunction<
           _dart_Cronet_UrlRequestParams_http_method_set>();
 
+  void Cronet_UrlRequestParams_request_headers_add(
+    ffi.Pointer<Cronet_UrlRequestParams> self,
+    ffi.Pointer<Cronet_HttpHeader> element,
+  ) {
+    return _Cronet_UrlRequestParams_request_headers_add(
+      self,
+      element,
+    );
+  }
+
+  late final _Cronet_UrlRequestParams_request_headers_add_ptr = _lookup<
+          ffi.NativeFunction<_c_Cronet_UrlRequestParams_request_headers_add>>(
+      'Cronet_UrlRequestParams_request_headers_add');
+  late final _dart_Cronet_UrlRequestParams_request_headers_add
+      _Cronet_UrlRequestParams_request_headers_add =
+      _Cronet_UrlRequestParams_request_headers_add_ptr.asFunction<
+          _dart_Cronet_UrlRequestParams_request_headers_add>();
+
   int Cronet_UrlRequest_Start(
     ffi.Pointer<Cronet_UrlRequest> self,
   ) {
@@ -584,6 +602,66 @@ class Cronet {
           'Cronet_UrlRequest_Init');
   late final _dart_Cronet_UrlRequest_Init _Cronet_UrlRequest_Init =
       _Cronet_UrlRequest_Init_ptr.asFunction<_dart_Cronet_UrlRequest_Init>();
+
+  ffi.Pointer<Cronet_HttpHeader> Cronet_HttpHeader_Create() {
+    return _Cronet_HttpHeader_Create();
+  }
+
+  late final _Cronet_HttpHeader_Create_ptr =
+      _lookup<ffi.NativeFunction<_c_Cronet_HttpHeader_Create>>(
+          'Cronet_HttpHeader_Create');
+  late final _dart_Cronet_HttpHeader_Create _Cronet_HttpHeader_Create =
+      _Cronet_HttpHeader_Create_ptr.asFunction<
+          _dart_Cronet_HttpHeader_Create>();
+
+  void Cronet_HttpHeader_Destroy(
+    ffi.Pointer<Cronet_HttpHeader> self,
+  ) {
+    return _Cronet_HttpHeader_Destroy(
+      self,
+    );
+  }
+
+  late final _Cronet_HttpHeader_Destroy_ptr =
+      _lookup<ffi.NativeFunction<_c_Cronet_HttpHeader_Destroy>>(
+          'Cronet_HttpHeader_Destroy');
+  late final _dart_Cronet_HttpHeader_Destroy _Cronet_HttpHeader_Destroy =
+      _Cronet_HttpHeader_Destroy_ptr.asFunction<
+          _dart_Cronet_HttpHeader_Destroy>();
+
+  void Cronet_HttpHeader_name_set(
+    ffi.Pointer<Cronet_HttpHeader> self,
+    ffi.Pointer<ffi.Int8> name,
+  ) {
+    return _Cronet_HttpHeader_name_set(
+      self,
+      name,
+    );
+  }
+
+  late final _Cronet_HttpHeader_name_set_ptr =
+      _lookup<ffi.NativeFunction<_c_Cronet_HttpHeader_name_set>>(
+          'Cronet_HttpHeader_name_set');
+  late final _dart_Cronet_HttpHeader_name_set _Cronet_HttpHeader_name_set =
+      _Cronet_HttpHeader_name_set_ptr.asFunction<
+          _dart_Cronet_HttpHeader_name_set>();
+
+  void Cronet_HttpHeader_value_set(
+    ffi.Pointer<Cronet_HttpHeader> self,
+    ffi.Pointer<ffi.Int8> value,
+  ) {
+    return _Cronet_HttpHeader_value_set(
+      self,
+      value,
+    );
+  }
+
+  late final _Cronet_HttpHeader_value_set_ptr =
+      _lookup<ffi.NativeFunction<_c_Cronet_HttpHeader_value_set>>(
+          'Cronet_HttpHeader_value_set');
+  late final _dart_Cronet_HttpHeader_value_set _Cronet_HttpHeader_value_set =
+      _Cronet_HttpHeader_value_set_ptr.asFunction<
+          _dart_Cronet_HttpHeader_value_set>();
 
   int Cronet_Buffer_GetSize(
     ffi.Pointer<Cronet_Buffer> self,
@@ -1085,6 +1163,16 @@ typedef _dart_Cronet_UrlRequestParams_http_method_set = void Function(
   ffi.Pointer<ffi.Int8> http_method,
 );
 
+typedef _c_Cronet_UrlRequestParams_request_headers_add = ffi.Void Function(
+  ffi.Pointer<Cronet_UrlRequestParams> self,
+  ffi.Pointer<Cronet_HttpHeader> element,
+);
+
+typedef _dart_Cronet_UrlRequestParams_request_headers_add = void Function(
+  ffi.Pointer<Cronet_UrlRequestParams> self,
+  ffi.Pointer<Cronet_HttpHeader> element,
+);
+
 typedef _c_Cronet_UrlRequest_Start = ffi.Int32 Function(
   ffi.Pointer<Cronet_UrlRequest> self,
 );
@@ -1125,6 +1213,39 @@ typedef _dart_Cronet_UrlRequest_Init = int Function(
   ffi.Pointer<ffi.Int8> url,
   ffi.Pointer<Cronet_UrlRequestParams> params,
   ffi.Pointer<ffi.Void> _executor,
+);
+
+typedef _c_Cronet_HttpHeader_Create = ffi.Pointer<Cronet_HttpHeader> Function();
+
+typedef _dart_Cronet_HttpHeader_Create = ffi.Pointer<Cronet_HttpHeader>
+    Function();
+
+typedef _c_Cronet_HttpHeader_Destroy = ffi.Void Function(
+  ffi.Pointer<Cronet_HttpHeader> self,
+);
+
+typedef _dart_Cronet_HttpHeader_Destroy = void Function(
+  ffi.Pointer<Cronet_HttpHeader> self,
+);
+
+typedef _c_Cronet_HttpHeader_name_set = ffi.Void Function(
+  ffi.Pointer<Cronet_HttpHeader> self,
+  ffi.Pointer<ffi.Int8> name,
+);
+
+typedef _dart_Cronet_HttpHeader_name_set = void Function(
+  ffi.Pointer<Cronet_HttpHeader> self,
+  ffi.Pointer<ffi.Int8> name,
+);
+
+typedef _c_Cronet_HttpHeader_value_set = ffi.Void Function(
+  ffi.Pointer<Cronet_HttpHeader> self,
+  ffi.Pointer<ffi.Int8> value,
+);
+
+typedef _dart_Cronet_HttpHeader_value_set = void Function(
+  ffi.Pointer<Cronet_HttpHeader> self,
+  ffi.Pointer<ffi.Int8> value,
 );
 
 typedef _c_Cronet_Buffer_GetSize = ffi.Uint64 Function(

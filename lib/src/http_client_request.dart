@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
@@ -6,7 +7,12 @@ import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
+import 'exceptions.dart';
+
 import 'generated_bindings.dart';
+
+part '../third_party/http_headers.dart';
+part '../third_party/http_date.dart';
 
 // Type definitions for various callbacks
 typedef RedirectReceivedCallback = void Function(String newLocationUrl);
@@ -49,10 +55,12 @@ class HttpClientRequest implements IOSink {
   final _CallbackHandler _cbh;
   final Pointer<Cronet_UrlRequest> _request;
 
+  final _headers = _HttpHeaders('1.1'); // Setting it to HTTP/1.1
+  // TODO: See how that affects and do we need to change
+  // Negotiated protocol info is only available via Cronet_UrlResponseInfo
+
   @override
   Encoding encoding;
-  // var _mutable =
-  //     true; // We will not mutate params/headers after close or done call.
 
   /// Initiates a [HttpClientRequest]. It is meant to be used by
   /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance and
@@ -96,12 +104,22 @@ class HttpClientRequest implements IOSink {
   @override
   Future<Stream<List<int>>> close() {
     return Future(() {
-      // _mutable = false;
-      // final request = _cronet.Cronet_UrlRequest_Create();
+      _headers._finalize(); // making headers immutable
       final request_params = _cronet.Cronet_UrlRequestParams_Create();
       _cronet.Cronet_UrlRequestParams_http_method_set(
           request_params, _method.toNativeUtf8().cast<Int8>());
-
+      headers.forEach((name, values) {
+        for (final value in values) {
+          final headerPtr = _cronet.Cronet_HttpHeader_Create();
+          _cronet.Cronet_HttpHeader_name_set(
+              headerPtr, name.toNativeUtf8().cast<Int8>());
+          _cronet.Cronet_HttpHeader_value_set(
+              headerPtr, value.toNativeUtf8().cast<Int8>());
+          _cronet.Cronet_UrlRequestParams_request_headers_add(
+              request_params, headerPtr);
+          _cronet.Cronet_HttpHeader_Destroy(headerPtr);
+        }
+      });
       _cronet.Cronet_UrlRequest_Init(
           _request,
           _cronet_engine,
@@ -212,6 +230,8 @@ class HttpClientRequest implements IOSink {
 
   /// The uri of the request.
   Uri get uri => _uri;
+
+  HttpHeaders get headers => _headers;
 }
 
 /// Deserializes the message sent by

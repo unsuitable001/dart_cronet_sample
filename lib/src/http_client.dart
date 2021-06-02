@@ -57,7 +57,7 @@ class HttpClient {
   late Stream _receivePortBroadcast;
   var _stop = false;
 
-  io.Directory? dir;
+  Uri? _temp;
 
   static const int defaultHttpPort = 80;
   static const int defaultHttpsPort = 443;
@@ -73,6 +73,9 @@ class HttpClient {
   /// 6. [maxCache] - Set maximum cache size in bytes. Set to `null` to let the system decide. Default - `10KB`.
   /// NOTE: For [CacheMode.in_memory], [maxCache] must not be null. For any other mode, it can be.
   ///
+  /// 7. If caches and cookies should persist, provide a directory using [cronet_storage]. Keeping it null will use
+  /// a temporary, non persistant storage.
+  ///
   /// Breaking Changes from `dart:io` based library:
   ///
   /// 1. [userAgent] property must be set when constructing [HttpClient] and can't be changed afterwards.
@@ -84,7 +87,8 @@ class HttpClient {
       this.brotli = true,
       this.accept_language = 'en_US',
       this.cacheMode = CacheMode.in_memory,
-      this.maxCache = 100 * 1024})
+      this.maxCache = 100 * 1024,
+      io.Directory? cronet_storage})
       : _cronet_engine = _cronet.Cronet_Engine_Create() {
     // Initialize Dart Native API dynamically
     _cronet.InitDartApiDL(NativeApi.initializeApiDLData);
@@ -114,16 +118,32 @@ class HttpClient {
     _cronet.Cronet_EngineParams_accept_language_set(
         engine_params, accept_language.toNativeUtf8().cast<Int8>());
 
-    switch (cacheMode) {
-      case CacheMode.disk:
-      case CacheMode.disk_no_http:
-        dir = io.Directory.systemTemp.createTempSync();
-        _cronet.Cronet_EngineParams_storage_path_set(
-            engine_params, dir!.path.toNativeUtf8().cast<Int8>());
-        break;
-      default:
-        break;
+    // switch (cacheMode) {
+    //   case CacheMode.disk:
+    //   case CacheMode.disk_no_http:
+    //     dir = io.Directory.systemTemp.createTempSync();
+    //     _cronet.Cronet_EngineParams_storage_path_set(
+    //         engine_params, dir!.path.toNativeUtf8().cast<Int8>());
+    //     break;
+    //   default:
+    //     break;
+    // }
+
+    if (cronet_storage == null) {
+      // temporary and non-persistant
+      cronet_storage = io.Directory.systemTemp.createTempSync();
+      _temp = cronet_storage.uri;
+    } else {
+      // persistant. Why in subfolder? If user
+      // chooses a directory by mistake, cronet will override this
+      // and it maybe better to store cronet files in a subfolder
+      cronet_storage =
+          io.Directory.fromUri(cronet_storage.uri.resolve('cronet_storage'));
+      cronet_storage.createSync(recursive: true);
     }
+
+    _cronet.Cronet_EngineParams_storage_path_set(
+        engine_params, cronet_storage.path.toNativeUtf8().cast<Int8>());
 
     _cronet.Cronet_EngineParams_http_cache_mode_set(
         engine_params, cacheMode.index);
@@ -150,7 +170,10 @@ class HttpClient {
       if (_stop) {
         streamsub.cancel();
         _receivePort.close();
-        dir?.deleteSync(recursive: true);
+        if (_temp != null) {
+          // deleteing non persistant storage if created
+          io.Directory.fromUri(_temp!).deleteSync(recursive: true);
+        }
         // if the folder is empty, delete it.
         if (!io.File.fromUri(_loggingFile).existsSync()) {
           io.File.fromUri(_loggingFile).parent.deleteSync();

@@ -326,6 +326,12 @@ CRONET_EXPORT Cronet_UrlRequestParamsPtr Cronet_UrlRequestParams_Create(void);
 CRONET_EXPORT
 void Cronet_UrlRequestParams_http_method_set(Cronet_UrlRequestParamsPtr self,
                                              const Cronet_String http_method);
+
+CRONET_EXPORT
+void Cronet_UrlRequestParams_request_headers_add(
+    Cronet_UrlRequestParamsPtr self,
+    const Cronet_HttpHeaderPtr element);
+
 CRONET_EXPORT
 Cronet_RESULT Cronet_UrlRequest_Start(Cronet_UrlRequestPtr self);
 CRONET_EXPORT
@@ -336,6 +342,16 @@ Cronet_RESULT Cronet_UrlRequest_Read(Cronet_UrlRequestPtr self,
 
 DART_EXPORT Cronet_RESULT Cronet_UrlRequest_Init(Cronet_UrlRequestPtr self, Cronet_EnginePtr engine, Cronet_String url, Cronet_UrlRequestParamsPtr params, ExecutorPtr _executor);
 
+
+CRONET_EXPORT Cronet_HttpHeaderPtr Cronet_HttpHeader_Create(void);
+CRONET_EXPORT void Cronet_HttpHeader_Destroy(Cronet_HttpHeaderPtr self);
+// Cronet_HttpHeader setters.
+CRONET_EXPORT
+void Cronet_HttpHeader_name_set(Cronet_HttpHeaderPtr self,
+                                const Cronet_String name);
+CRONET_EXPORT
+void Cronet_HttpHeader_value_set(Cronet_HttpHeaderPtr self,
+                                 const Cronet_String value);
 
 // Create an instance of Cronet_Buffer.
 // CRONET_EXPORT Cronet_BufferPtr Cronet_Buffer_Create(void);

@@ -142,6 +142,27 @@ P_IMPORT(Cronet_ClientContext, Cronet_UrlRequest_GetClientContext, Cronet_UrlReq
 P_IMPORT(Cronet_UrlRequestParamsPtr, Cronet_UrlRequestParams_Create, void);
 P_IMPORT(void, Cronet_UrlRequestParams_http_method_set, Cronet_UrlRequestParamsPtr, const Cronet_String);
 
+P_IMPORT(void, Cronet_UrlRequestParams_request_headers_add, Cronet_UrlRequestParamsPtr,  const Cronet_HttpHeaderPtr);
+
+void Cronet_UrlRequestParams_request_headers_add(
+    Cronet_UrlRequestParamsPtr self,
+    const Cronet_HttpHeaderPtr element) {return _Cronet_UrlRequestParams_request_headers_add(self, element);}
+
+P_IMPORT(Cronet_HttpHeaderPtr, Cronet_HttpHeader_Create, void);
+Cronet_HttpHeaderPtr Cronet_HttpHeader_Create(void) {return _Cronet_HttpHeader_Create();}
+
+P_IMPORT(void,Cronet_HttpHeader_Destroy, Cronet_HttpHeaderPtr);
+void Cronet_HttpHeader_Destroy(Cronet_HttpHeaderPtr self) {return _Cronet_HttpHeader_Destroy(self);}
+
+P_IMPORT(void,Cronet_HttpHeader_name_set, Cronet_HttpHeaderPtr, const Cronet_String);
+
+void Cronet_HttpHeader_name_set(Cronet_HttpHeaderPtr self,
+                                const Cronet_String name) {return _Cronet_HttpHeader_name_set(self, name);}
+
+P_IMPORT(void,Cronet_HttpHeader_value_set, Cronet_HttpHeaderPtr, const Cronet_String);
+void Cronet_HttpHeader_value_set(Cronet_HttpHeaderPtr self,
+                                 const Cronet_String value) {return _Cronet_HttpHeader_value_set(self, value);}
+
 // Unexposed - see Cronet_UrlRequest_Init
 P_IMPORT(Cronet_RESULT, Cronet_UrlRequest_InitWithParams, Cronet_UrlRequestPtr, Cronet_EnginePtr, Cronet_String, Cronet_UrlRequestParamsPtr, Cronet_UrlRequestCallbackPtr, Cronet_ExecutorPtr);
 

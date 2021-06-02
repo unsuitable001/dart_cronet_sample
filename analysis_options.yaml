@@ -7,7 +7,7 @@ analyzer:
   exclude:
     - example/**
     - lib/cronet_sample.dart # due to method channel
-
+    - lib/third_party/**
 linter:
   rules:
     - directives_ordering
