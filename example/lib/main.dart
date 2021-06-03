@@ -74,7 +74,7 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Center(
             child: Column(children: [
-          Text('Cronet Version: ${client.HttpClientVersion}'),
+          Text('Cronet Version: ${client.httpClientVersion}'),
           _fetching
               ? CircularProgressIndicator()
               : Expanded(child: SingleChildScrollView(child: Text('$data'))),

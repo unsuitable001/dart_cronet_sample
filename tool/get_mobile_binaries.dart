@@ -8,34 +8,28 @@ import 'package:cronet_sample/src/find_resource.dart';
 /// Move binary files for mobiles. Currenly just [Android] is implemented
 void placeMobileBinaries(String platform) {
   if (platform.startsWith('android')) {
-    final android = findPackageRoot()!.toFilePath() + 'android';
+    final android = '${findPackageRoot()!.toFilePath()}android';
 
-    Directory(android + '/libs').createSync();
+    Directory('$android/libs').createSync();
 
-    Directory('cronet_binaries/' + platform + '/libs')
-        .listSync()
-        .forEach((jar) {
+    Directory('cronet_binaries/$platform/libs').listSync().forEach((jar) {
       if (jar is File) {
-        jar.renameSync(android + '/libs/' + basename(jar.path));
+        jar.renameSync('$android/libs/${basename(jar.path)}');
       }
     }); // move the extracted jars
 
-    Directory(android + '/src/main/jniLibs').createSync();
+    Directory('$android/src/main/jniLibs').createSync();
 
-    Directory(
-            'cronet_binaries/' + platform + '/' + platform.split('android')[1])
+    Directory('cronet_binaries/$platform/${platform.split('android')[1]}')
         .listSync()
         .forEach((cronet) {
       if (cronet is File) {
-        Directory(android + '/src/main/jniLibs/' + platform.split('android')[1])
+        Directory('$android/src/main/jniLibs/${platform.split('android')[1]}')
             .createSync();
 
         if (cronet is File) {
-          cronet.renameSync(android +
-              '/src/main/jniLibs/' +
-              platform.split('android')[1] +
-              '/' +
-              basename(cronet.path));
+          cronet.renameSync(
+              '$android/src/main/jniLibs/${platform.split('android')[1]}/${basename(cronet.path)}');
         }
       }
     }); // move cronet binaries
@@ -43,13 +37,13 @@ void placeMobileBinaries(String platform) {
   }
 }
 
-void main(List<String> platforms) {
+Future<void> main(List<String> platforms) async {
   if (platforms.isEmpty) {
     print('Please provide list of platforms');
     return;
   }
-  platforms.forEach((platform) async {
+  for (final platform in platforms) {
     await downloadCronetBinaries(platform);
     placeMobileBinaries(platform);
-  });
+  }
 }

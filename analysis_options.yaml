@@ -1,4 +1,4 @@
-include: package:pedantic/analysis_options.yaml
+include: package:lint/analysis_options.yaml
 
 analyzer:
   strong-mode:
@@ -6,12 +6,14 @@ analyzer:
     implicit-dynamic: false
   exclude:
     - example/**
+    - lib/third_party/**     # may not be fully migrated
     - lib/cronet_sample.dart # due to method channel
-    - lib/third_party/**
+    - lib/src/generated_bindings.dart # ignore generated files
 linter:
   rules:
-    - directives_ordering
-    - prefer_final_fields
-    - prefer_final_locals
-    - prefer_final_in_for_each
-    - unnecessary_brace_in_string_interps
+    avoid_print: false  # for now. Will enable this after writing tests
+    directives_ordering: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+    unnecessary_brace_in_string_interps: true

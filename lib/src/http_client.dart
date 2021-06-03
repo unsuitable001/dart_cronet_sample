@@ -43,7 +43,7 @@ class HttpClient {
   final bool quic;
   final bool http2;
   final bool brotli;
-  final String accept_language;
+  final String acceptLanguage;
   final CacheMode cacheMode;
   final int? maxCache;
   final List<QuicHint>? quicHints;
@@ -52,7 +52,7 @@ class HttpClient {
   final _loggingFile =
       io.Directory.systemTemp.createTempSync().uri.resolve('netlog.json');
 
-  final Pointer<Cronet_Engine> _cronet_engine;
+  final Pointer<Cronet_Engine> _cronetEngine;
   final ReceivePort _receivePort = ReceivePort();
   late Stream _receivePortBroadcast;
   var _stop = false;
@@ -68,12 +68,12 @@ class HttpClient {
   /// 1. [quic] use QUIC protocol. Default - true. You can also pass [quicHints].
   /// 2. [http2] use HTTP2 protocol. Default - true
   /// 3. [brotli] use brotli compression. Default - true
-  /// 4. [accept_language] - Default - 'en_US'
-  /// 5. [cacheMode] - Choose from [CacheMode]. Default - [CacheMode.in_memory]
+  /// 4. [acceptLanguage] - Default - 'en_US'
+  /// 5. [cacheMode] - Choose from [CacheMode]. Default - [CacheMode.inMemory]
   /// 6. [maxCache] - Set maximum cache size in bytes. Set to `null` to let the system decide. Default - `10KB`.
-  /// NOTE: For [CacheMode.in_memory], [maxCache] must not be null. For any other mode, it can be.
+  /// NOTE: For [CacheMode.inMemory], [maxCache] must not be null. For any other mode, it can be.
   ///
-  /// 7. If caches and cookies should persist, provide a directory using [cronet_storage]. Keeping it null will use
+  /// 7. If caches and cookies should persist, provide a directory using [cronetStorage]. Keeping it null will use
   /// a temporary, non persistant storage.
   ///
   /// Breaking Changes from `dart:io` based library:
@@ -85,38 +85,38 @@ class HttpClient {
       this.quicHints,
       this.http2 = true,
       this.brotli = true,
-      this.accept_language = 'en_US',
-      this.cacheMode = CacheMode.in_memory,
+      this.acceptLanguage = 'en_US',
+      this.cacheMode = CacheMode.inMemory,
       this.maxCache = 100 * 1024,
-      io.Directory? cronet_storage})
-      : _cronet_engine = _cronet.Cronet_Engine_Create() {
+      io.Directory? cronetStorage})
+      : _cronetEngine = _cronet.Cronet_Engine_Create() {
     // Initialize Dart Native API dynamically
     _cronet.InitDartApiDL(NativeApi.initializeApiDLData);
     _cronet.registerHttpClient(this);
 
     // starting the engine with parameters
-    final engine_params = _cronet.Cronet_EngineParams_Create();
+    final engineParams = _cronet.Cronet_EngineParams_Create();
     _cronet.Cronet_EngineParams_user_agent_set(
-        engine_params, userAgent.toNativeUtf8().cast<Int8>());
-    _cronet.Cronet_EngineParams_enable_quic_set(engine_params, quic);
+        engineParams, userAgent.toNativeUtf8().cast<Int8>());
+    _cronet.Cronet_EngineParams_enable_quic_set(engineParams, quic);
 
     if (quicHints != null) {
-      quicHints?.forEach((quicHint) {
+      for (final quicHint in quicHints!) {
         final hint = _cronet.Cronet_QuicHint_Create();
         _cronet.Cronet_QuicHint_host_set(
             hint, quicHint.host.toNativeUtf8().cast<Int8>());
         _cronet.Cronet_QuicHint_port_set(hint, quicHint.port);
         _cronet.Cronet_QuicHint_alternate_port_set(
-            hint, quicHint.alternate_port);
-        _cronet.Cronet_EngineParams_quic_hints_add(engine_params, hint);
+            hint, quicHint.alternatePort);
+        _cronet.Cronet_EngineParams_quic_hints_add(engineParams, hint);
         _cronet.Cronet_QuicHint_Destroy(hint);
-      });
+      }
     }
 
-    _cronet.Cronet_EngineParams_enable_http2_set(engine_params, http2);
-    _cronet.Cronet_EngineParams_enable_brotli_set(engine_params, brotli);
+    _cronet.Cronet_EngineParams_enable_http2_set(engineParams, http2);
+    _cronet.Cronet_EngineParams_enable_brotli_set(engineParams, brotli);
     _cronet.Cronet_EngineParams_accept_language_set(
-        engine_params, accept_language.toNativeUtf8().cast<Int8>());
+        engineParams, acceptLanguage.toNativeUtf8().cast<Int8>());
 
     // switch (cacheMode) {
     //   case CacheMode.disk:
@@ -129,36 +129,36 @@ class HttpClient {
     //     break;
     // }
 
-    if (cronet_storage == null) {
+    if (cronetStorage == null) {
       // temporary and non-persistant
-      cronet_storage = io.Directory.systemTemp.createTempSync();
-      _temp = cronet_storage.uri;
+      cronetStorage = io.Directory.systemTemp.createTempSync();
+      _temp = cronetStorage.uri;
     } else {
       // persistant. Why in subfolder? If user
       // chooses a directory by mistake, cronet will override this
       // and it maybe better to store cronet files in a subfolder
-      cronet_storage =
-          io.Directory.fromUri(cronet_storage.uri.resolve('cronet_storage'));
-      cronet_storage.createSync(recursive: true);
+      cronetStorage =
+          io.Directory.fromUri(cronetStorage.uri.resolve('cronet_storage'));
+      cronetStorage.createSync(recursive: true);
     }
 
     _cronet.Cronet_EngineParams_storage_path_set(
-        engine_params, cronet_storage.path.toNativeUtf8().cast<Int8>());
+        engineParams, cronetStorage.path.toNativeUtf8().cast<Int8>());
 
     _cronet.Cronet_EngineParams_http_cache_mode_set(
-        engine_params, cacheMode.index);
+        engineParams, cacheMode.index);
 
     if (maxCache != null) {
       _cronet.Cronet_EngineParams_http_cache_max_size_set(
-          engine_params, maxCache!);
-    } else if (cacheMode == CacheMode.in_memory) {
+          engineParams, maxCache!);
+    } else if (cacheMode == CacheMode.inMemory) {
       // if cache size isn't set and it's in memory cache
       _cronet.Cronet_EngineParams_http_cache_max_size_set(
-          engine_params, 10 * 1024);
+          engineParams, 10 * 1024);
     }
 
-    _cronet.Cronet_Engine_StartWithParams(_cronet_engine, engine_params);
-    _cronet.Cronet_EngineParams_Destroy(engine_params);
+    _cronet.Cronet_Engine_StartWithParams(_cronetEngine, engineParams);
+    _cronet.Cronet_EngineParams_Destroy(engineParams);
 
     // Register the native port to C side
     _cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
@@ -213,10 +213,10 @@ class HttpClient {
   Future<HttpClientRequest> openUrl(String method, Uri url) {
     return Future(() {
       if (_stop) {
-        throw Exception('Client is closed. Can\'t open new connections');
+        throw Exception("Client is closed. Can't open new connections");
       }
       return HttpClientRequest(
-          url, method, _cronet, _cronet_engine, _receivePortBroadcast);
+          url, method, _cronet, _cronetEngine, _receivePortBroadcast);
     });
   }
 
@@ -321,12 +321,12 @@ class HttpClient {
   set enableTimelineLogging(bool enable) {
     io.File.fromUri(_loggingFile).createSync();
     if (enable) {
-      if (!_cronet.Cronet_Engine_StartNetLogToFile(_cronet_engine,
-          _loggingFile.path.toNativeUtf8().cast<Int8>(), true)) {
+      if (!_cronet.Cronet_Engine_StartNetLogToFile(
+          _cronetEngine, _loggingFile.path.toNativeUtf8().cast<Int8>(), true)) {
         throw LoggingException();
       }
     } else {
-      _cronet.Cronet_Engine_StopNetLog(_cronet_engine);
+      _cronet.Cronet_Engine_StopNetLog(_cronetEngine);
     }
     _enableTimelineLogging = enable;
   }
@@ -344,8 +344,8 @@ class HttpClient {
   }
 
   /// Gets Cronet's version
-  String get HttpClientVersion =>
-      _cronet.Cronet_Engine_GetVersionString(_cronet_engine)
+  String get httpClientVersion =>
+      _cronet.Cronet_Engine_GetVersionString(_cronetEngine)
           .cast<Utf8>()
           .toDartString();
 }

@@ -39,7 +39,7 @@ String? _resolveLibUri(String name) {
 
   // If lib is in script's directory's parent
 
-  libUri = Uri.directory(dirname(Platform.script.path)).resolve('../' + name);
+  libUri = Uri.directory(dirname(Platform.script.path)).resolve('../$name');
 
   if (_doesFileExist(libUri)) {
     return libUri.toFilePath(windows: Platform.isWindows);
@@ -48,7 +48,7 @@ String? _resolveLibUri(String name) {
   // If lib is in executable's directory's parent
 
   libUri =
-      Uri.directory(dirname(Platform.resolvedExecutable)).resolve('../' + name);
+      Uri.directory(dirname(Platform.resolvedExecutable)).resolve('../$name');
 
   if (_doesFileExist(libUri)) {
     return libUri.toFilePath(windows: Platform.isWindows);
@@ -62,7 +62,7 @@ String? _resolveLibUri(String name) {
 ///
 /// Throws an [ArgumentError] if library can't be loaded.
 DynamicLibrary loadWrapper() {
-  final fileName = 'wrapper';
+  const fileName = 'wrapper';
   var ext = '.so';
   var prefix = '';
 

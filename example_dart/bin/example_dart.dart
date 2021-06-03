@@ -7,16 +7,14 @@ import 'package:cronet_sample/cronet_sample.dart';
 void main(List<String> args) {
   final stopwatch = Stopwatch()..start();
   final client = HttpClient();
-  client.enableTimelineLogging = true;
   print('Log File: ${client.logUri.path}');
   for (var i = 0; i < 3; i++) {
     // Demo - with concurrent requests
     client
         .getUrl(Uri.parse('https://postman-echo.com/headers'))
         .then((HttpClientRequest request) {
-        
-        request.headers.set(HttpHeaders.cacheControlHeader,
-                    'max-age=3600, must-revalidate');
+      request.headers
+          .set(HttpHeaders.cacheControlHeader, 'max-age=3600, must-revalidate');
       /* The alternate API introduced.
     NOTE: If we register callbacks & listen to the stream at the same time,
     the stream will be closed immediately executing the onDone callback */

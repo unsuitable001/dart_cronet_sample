@@ -6,8 +6,8 @@ import 'dart:io' show Directory, File, Process, ProcessResult, ProcessStartMode;
 
 import 'find_resource.dart';
 
-final _release = '1.0.0';
-final _cronetBinaryUrl =
+const _release = '1.0.0';
+const _cronetBinaryUrl =
     'https://github.com/unsuitable001/dart_cronet_sample/releases/download/$_release/';
 final _cBinExtMap = {
   'linux64': '.tar.xz',
@@ -15,7 +15,7 @@ final _cBinExtMap = {
   'androidarm64-v8a': '.tar.xz',
 };
 
-final _cronet_version = '"86.0.4240.198"';
+const _cronetVersion = '"86.0.4240.198"';
 
 /// Builds the [wrapper] shared library
 /// according to [build.sh] file
@@ -23,12 +23,12 @@ void buildWrapper() {
   final wrapperPath = wrapperSourcePath();
 
   print('Building Wrapper...');
-  var result = Process.runSync(
-      wrapperPath + '/build.sh', [wrapperPath, _cronet_version]);
+  var result =
+      Process.runSync('$wrapperPath/build.sh', [wrapperPath, _cronetVersion]);
   print(result.stdout);
   print(result.stderr);
   print('Copying wrapper to project root...');
-  result = Process.runSync('cp', [wrapperPath + '/wrapper.so', '.']);
+  result = Process.runSync('cp', ['$wrapperPath/wrapper.so', '.']);
   print(result.stdout);
   print(result.stderr);
 }
@@ -50,7 +50,7 @@ void placeBinaries(String platform, String fileName) {
 
   if (res.exitCode != 0) {
     throw Exception(
-        'Can\'t unzip. Check if the downloaded file isn\'t corrupted');
+        "Can't unzip. Check if the downloaded file isn't corrupted");
   }
   print('Done! Cleaning up...');
 
@@ -69,10 +69,10 @@ Future<void> downloadCronetBinaries(String platform) async {
     final dProcess = await Process.start('curl', ['-OL', downloadUrl],
         mode: ProcessStartMode.inheritStdio);
     if (await dProcess.exitCode != 0) {
-      throw Exception('Can\'t download. Check your network connection!');
+      throw Exception("Can't download. Check your network connection!");
     }
     placeBinaries(platform, fileName);
   } else {
-    print('Cronet $platform is already available. No need to download.');
+    print("Cronet $platform is already available. No need to download.");
   }
 }

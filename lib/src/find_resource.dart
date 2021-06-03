@@ -16,18 +16,18 @@ Uri? findPackageRoot() {
         final packageMap =
             jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
         if (packageMap['configVersion'] == 2) {
-          var packageRootUriString = ((packageMap['packages'] as List<dynamic>)
+          var packageRootUriString = (packageMap['packages'] as List<dynamic>)
                   .cast<Map<String, dynamic>>()
                   .firstWhere((element) => element['name'] == 'cronet_sample')[
-              'rootUri'] as String);
+              'rootUri'] as String;
           packageRootUriString = packageRootUriString.endsWith('/')
               ? packageRootUriString
-              : packageRootUriString + '/';
+              : '$packageRootUriString/';
           return file.parent.uri.resolve(packageRootUriString);
         }
       } catch (e, s) {
         print(s);
-        throw Exception('Cannot resolve package:cronet_sample\'s rootUri');
+        throw Exception("Cannot resolve package:cronet_sample's rootUri");
       }
     }
   } while (root != (root = root.resolve('..')));
@@ -40,7 +40,7 @@ String wrapperSourcePath() {
   // Finds this package's location
   final packagePath = findPackageRoot();
   if (packagePath == null) {
-    throw Exception('Cannot resolve package:cronet_sample\'s rootUri');
+    throw Exception("Cannot resolve package:cronet_sample's rootUri");
   }
   final wrapperSource = packagePath.resolve('lib/src/native/wrapper');
   if (!Directory.fromUri(wrapperSource).existsSync()) {

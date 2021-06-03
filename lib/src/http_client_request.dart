@@ -17,7 +17,7 @@ part '../third_party/http_date.dart';
 // Type definitions for various callbacks
 typedef RedirectReceivedCallback = void Function(String newLocationUrl);
 typedef ResponseStartedCallback = void Function();
-typedef ReadDataCallback = void Function(List<int> data, int bytes_read,
+typedef ReadDataCallback = void Function(List<int> data, int bytesRead,
     Function read); // onReadComplete may confuse people
 typedef FailedCallabck = void Function();
 typedef CanceledCallabck = void Function();
@@ -51,7 +51,7 @@ class HttpClientRequest implements IOSink {
   final Uri _uri;
   final String _method;
   final Cronet _cronet;
-  final Pointer<Cronet_Engine> _cronet_engine;
+  final Pointer<Cronet_Engine> _cronetEngine;
   final _CallbackHandler _cbh;
   final Pointer<Cronet_UrlRequest> _request;
 
@@ -63,13 +63,12 @@ class HttpClientRequest implements IOSink {
   Encoding encoding;
 
   /// Initiates a [HttpClientRequest]. It is meant to be used by
-  /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance and
-  /// a C pointer to [_cronet_engine].
-  HttpClientRequest(this._uri, this._method, this._cronet, this._cronet_engine,
+  /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance
+  HttpClientRequest(this._uri, this._method, this._cronet, this._cronetEngine,
       Stream<dynamic> receivePortStream,
       {this.encoding = utf8})
-      : _cbh = _CallbackHandler(_cronet, _cronet_engine,
-            _cronet.Create_Executor(), receivePortStream),
+      : _cbh = _CallbackHandler(
+            _cronet, _cronet.Create_Executor(), receivePortStream),
         _request = _cronet.Cronet_UrlRequest_Create();
 
   /// This is one of the methods to get data out of [HttpClientRequest].
@@ -105,9 +104,9 @@ class HttpClientRequest implements IOSink {
   Future<Stream<List<int>>> close() {
     return Future(() {
       _headers._finalize(); // making headers immutable
-      final request_params = _cronet.Cronet_UrlRequestParams_Create();
+      final requestParams = _cronet.Cronet_UrlRequestParams_Create();
       _cronet.Cronet_UrlRequestParams_http_method_set(
-          request_params, _method.toNativeUtf8().cast<Int8>());
+          requestParams, _method.toNativeUtf8().cast<Int8>());
       headers.forEach((name, values) {
         for (final value in values) {
           final headerPtr = _cronet.Cronet_HttpHeader_Create();
@@ -116,15 +115,15 @@ class HttpClientRequest implements IOSink {
           _cronet.Cronet_HttpHeader_value_set(
               headerPtr, value.toNativeUtf8().cast<Int8>());
           _cronet.Cronet_UrlRequestParams_request_headers_add(
-              request_params, headerPtr);
+              requestParams, headerPtr);
           _cronet.Cronet_HttpHeader_Destroy(headerPtr);
         }
       });
       _cronet.Cronet_UrlRequest_Init(
           _request,
-          _cronet_engine,
+          _cronetEngine,
           _uri.toString().toNativeUtf8().cast<Int8>(),
-          request_params,
+          requestParams,
           _cbh.executor);
       _cronet.Cronet_UrlRequest_Start(_request);
       _cbh.listen(_request);
@@ -162,22 +161,26 @@ class HttpClientRequest implements IOSink {
 
   @override
   void add(List<int> data) {
-    _cbh._controller.sink.add(data);
+    // TODO: Implement this with POST request
+    throw UnimplementedError();
   }
 
   @override
   void addError(Object error, [StackTrace? stackTrace]) {
-    _cbh._controller.sink.addError(error, stackTrace);
+    // TODO: Implement this with POST request
+    throw UnimplementedError();
   }
 
   @override
   Future addStream(Stream<List<int>> stream) {
-    return _cbh._controller.sink.addStream(stream);
+    // TODO: Implement this with POST request
+    throw UnimplementedError();
   }
 
   @override
   Future flush() {
-    return _cbh._controller.close().whenComplete(() => null);
+    // TODO: Implement this with POST request
+    throw UnimplementedError();
   }
 
   @override
@@ -264,8 +267,8 @@ class _CallbackHandler {
   final Pointer<Void> executor;
 
   // These are a part of HttpClientRequest Public API
-  var followRedirects = true;
-  var maxRedirects = 5;
+  bool followRedirects = true;
+  int maxRedirects = 5;
 
   /// Stream controller to allow consumption of data
   /// like [HttpClientResponse]
@@ -279,8 +282,7 @@ class _CallbackHandler {
   SuccessCallabck? _onSuccess;
 
   /// Registers the [NativePort] to the cronet side.
-  _CallbackHandler(this.cronet, Pointer<Cronet_Engine> engine, this.executor,
-      this._receivePortStream);
+  _CallbackHandler(this.cronet, this.executor, this._receivePortStream);
 
   Stream<List<int>> get stream => _controller.stream;
 
@@ -378,17 +380,17 @@ class _CallbackHandler {
             final request = Pointer<Cronet_UrlRequest>.fromAddress(args[0]);
             final _ = Pointer<Cronet_UrlResponseInfo>.fromAddress(args[1]);
             final buffer = Pointer<Cronet_Buffer>.fromAddress(args[2]);
-            final bytes_read = args[3];
+            final bytesRead = args[3];
 
-            print('Recieved: $bytes_read');
+            print('Recieved: $bytesRead');
 
             final data = cronet.Cronet_Buffer_GetData(buffer)
                 .cast<Uint8>()
-                .asTypedList(bytes_read);
+                .asTypedList(bytesRead);
 
             // invoke the callback
             if (_onReadData != null) {
-              _onReadData!(data.toList(growable: false), bytes_read,
+              _onReadData!(data.toList(growable: false), bytesRead,
                   () => cronet.Cronet_UrlRequest_Read(request, buffer));
             } else {
               // or, add data to the stream
