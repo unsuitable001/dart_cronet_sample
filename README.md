@@ -5,7 +5,6 @@ A simple HTTP Client in Dart based on Cronet. (Version: 86.0.4240.198)
 Ported from: https://chromium.googlesource.com/chromium/src/+/master/components/cronet/native/sample/
 
 [![Build Status](https://github.com/unsuitable001/dart_cronet_sample/workflows/Dart%20CI/badge.svg)](https://github.com/unsuitable001/dart_cronet_sample/actions?query=workflow%3A"Dart+CI")
-[![style: lint](https://img.shields.io/badge/style-lint-4BC0F5.svg)](https://pub.dev/packages/lint)
 
 ~~Checkout the Flutter version with Android support: https://github.com/unsuitable001/flutter_cronet_sample~~
 
