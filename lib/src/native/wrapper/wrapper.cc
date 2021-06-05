@@ -6,6 +6,7 @@
 #include "sample_executor.h"
 #include <iostream>
 #include <stdarg.h>
+#include <tr1/unordered_map>
 
 // Set CRONET_VERSION from build script
 
@@ -34,8 +35,8 @@ intptr_t InitDartApiDL(void* data) {
 
 // loading cronet
 LIBTYPE handle = OPENLIB(CRONET_LIB_NAME);
-Dart_Port _callback_port;
-Cronet_EnginePtr cronet_engine = NULL;
+std::tr1::unordered_map<Cronet_UrlRequestPtr, Dart_Port> requestNativePorts;
+unsigned int engine_count = 0;
 
 static void FreeFinalizer(void*, void* value) {
   free(value);
@@ -48,7 +49,9 @@ static void FreeFinalizer(void*, void* value) {
 // ReceievePort's NativePort component
 //
 // This is required to send the data
-void registerCallbackHandler(Dart_Port send_port) {_callback_port = send_port;}
+void registerCallbackHandler(Dart_Port send_port, Cronet_UrlRequestPtr rp) {
+  requestNativePorts[rp] = send_port;
+}
 
 // This sends the callback name and the associated data
 // with it to the Dart side via NativePort
@@ -74,7 +77,7 @@ void dispatchCallback(const char* methodname,Cronet_UrlRequestPtr request , Dart
   c_request.value.as_array.length =
       sizeof(c_request_arr) / sizeof(c_request_arr[0]);
   
-  Dart_PostCObject_DL(_callback_port, &c_request);
+  Dart_PostCObject_DL(requestNativePorts[request], &c_request);
 }
 
 // Builds the arguments to pass to the Dart side
@@ -201,14 +204,22 @@ void Cronet_Engine_StopNetLog(Cronet_EnginePtr self) {return _Cronet_Engine_Stop
 static void HttpClientDestroy(void* isolate_callback_data,
                          void* peer) {
   std::cout << "Engine Destroy" << std::endl;
-  _Cronet_Engine_Shutdown(cronet_engine);
-  _Cronet_Engine_Destroy(cronet_engine);
-  CLOSELIB(handle);
+  Cronet_EnginePtr ce = reinterpret_cast<Cronet_EnginePtr>(peer);
+  _Cronet_Engine_Shutdown(ce);
+  _Cronet_Engine_Destroy(ce);
+  engine_count--;
+  if(requestNativePorts.size() == 0 && engine_count == 0) {
+    CLOSELIB(handle);
+  } 
+}
+
+void removeRequest(Cronet_UrlRequestPtr rp) {
+  requestNativePorts.erase(rp);
 }
 
 // Register our HttpClient object from dart side
-void registerHttpClient(Dart_Handle h) {
-  void* peer = 0x0;
+void registerHttpClient(Dart_Handle h, Cronet_EnginePtr ce) {
+  void* peer = ce;
   intptr_t size = 8;
   Dart_NewFinalizableHandle_DL(h, peer, size, HttpClientDestroy);
 }
@@ -288,7 +299,8 @@ Cronet_EnginePtr Cronet_Engine_Create() {
     std::clog << dlerror() << std::endl;
     exit(EXIT_FAILURE);
   }
-  return cronet_engine = _Cronet_Engine_Create();
+  engine_count++;
+  return _Cronet_Engine_Create();
 }
 
 Cronet_RESULT Cronet_Engine_Shutdown(Cronet_EnginePtr self) { return _Cronet_Engine_Shutdown(self); }

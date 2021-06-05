@@ -6,7 +6,6 @@
 #include "sample_executor.h"
 #include <iostream>
 extern LIBTYPE handle;
-extern Dart_Port _callback_port;
 
 // cronet function loading and exposing macros
 // use IMPORT to expose a API unchanged or just for private use - accessable as func_name

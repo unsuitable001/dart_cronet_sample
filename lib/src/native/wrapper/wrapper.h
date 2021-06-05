@@ -42,13 +42,11 @@ extern "C" {
 
 /* Wrapper Helpers */
 
-DART_EXPORT void registerCallbackHandler(Dart_Port nativePort);
 
 DART_EXPORT void dispatchCallback(char* methodname);
 
 DART_EXPORT intptr_t InitDartApiDL(void* data);
 
-DART_EXPORT void registerHttpClient(Dart_Handle h);
 
 typedef void* ExecutorPtr;
 
@@ -207,7 +205,9 @@ typedef enum Cronet_UrlRequestStatusListener_Status {
 } Cronet_UrlRequestStatusListener_Status;
 
 
-
+DART_EXPORT void registerHttpClient(Dart_Handle h, Cronet_EnginePtr ce);
+DART_EXPORT void registerCallbackHandler(Dart_Port nativePort, Cronet_UrlRequestPtr rp);
+DART_EXPORT void removeRequest(Cronet_UrlRequestPtr rp);
 /* function signatures derived from cronet.idl_c.h. 
 NOTE: Some are modified if required for wrapping */
 

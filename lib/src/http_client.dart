@@ -92,7 +92,7 @@ class HttpClient {
       : _cronetEngine = _cronet.Cronet_Engine_Create() {
     // Initialize Dart Native API dynamically
     _cronet.InitDartApiDL(NativeApi.initializeApiDLData);
-    _cronet.registerHttpClient(this);
+    _cronet.registerHttpClient(this, _cronetEngine);
 
     // starting the engine with parameters
     final engineParams = _cronet.Cronet_EngineParams_Create();
@@ -161,7 +161,7 @@ class HttpClient {
     _cronet.Cronet_EngineParams_Destroy(engineParams);
 
     // Register the native port to C side
-    _cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
+    // _cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
     // Convert the recieve port stream to broadcast - for concurrent requests
     _receivePortBroadcast =
         _receivePort.asBroadcastStream(onListen: (streamsub) {
@@ -216,7 +216,7 @@ class HttpClient {
         throw Exception("Client is closed. Can't open new connections");
       }
       return HttpClientRequest(
-          url, method, _cronet, _cronetEngine, _receivePortBroadcast);
+          url, method, _cronet, _cronetEngine, _receivePortBroadcast, _receivePort);
     });
   }
 

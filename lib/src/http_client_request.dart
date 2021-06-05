@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
@@ -65,11 +66,14 @@ class HttpClientRequest implements IOSink {
   /// Initiates a [HttpClientRequest]. It is meant to be used by
   /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance
   HttpClientRequest(this._uri, this._method, this._cronet, this._cronetEngine,
-      Stream<dynamic> receivePortStream,
+      Stream<dynamic> receivePortStream, ReceivePort rp,
       {this.encoding = utf8})
       : _cbh = _CallbackHandler(
             _cronet, _cronet.Create_Executor(), receivePortStream),
-        _request = _cronet.Cronet_UrlRequest_Create();
+        _request = _cronet.Cronet_UrlRequest_Create() {
+          
+        _cronet.registerCallbackHandler(rp.sendPort.nativePort, _request);
+      }
 
   /// This is one of the methods to get data out of [HttpClientRequest].
   /// Accepted callbacks are [RedirectReceivedCallback],
@@ -410,6 +414,7 @@ class _CallbackHandler {
             }
             if (_onReadData == null) {
               _controller.close();
+              cronet.removeRequest(reqPtr);
             }
           }
           break;
@@ -423,6 +428,7 @@ class _CallbackHandler {
             }
             if (_onReadData == null) {
               _controller.close();
+              cronet.removeRequest(reqPtr);
             }
           }
           break;
@@ -437,6 +443,7 @@ class _CallbackHandler {
             }
             if (_onReadData == null) {
               _controller.close();
+              cronet.removeRequest(reqPtr);
             }
           }
           break;
