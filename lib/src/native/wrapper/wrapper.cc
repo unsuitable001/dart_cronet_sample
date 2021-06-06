@@ -36,7 +36,6 @@ intptr_t InitDartApiDL(void* data) {
 // loading cronet
 LIBTYPE handle = OPENLIB(CRONET_LIB_NAME);
 std::tr1::unordered_map<Cronet_UrlRequestPtr, Dart_Port> requestNativePorts;
-unsigned int engine_count = 0;
 
 static void FreeFinalizer(void*, void* value) {
   free(value);
@@ -202,11 +201,10 @@ static void HttpClientDestroy(void* isolate_callback_data,
   Cronet_EnginePtr ce = reinterpret_cast<Cronet_EnginePtr>(peer);
   _Cronet_Engine_Shutdown(ce);
   _Cronet_Engine_Destroy(ce);
-  engine_count--;
-  if(requestNativePorts.size() == 0 && engine_count == 0) {
-    std::cout << "Unload Cronet" << std::endl;
-    CLOSELIB(handle);
-  } 
+}
+
+void unloadCronet() {
+  CLOSELIB(handle);
 }
 
 void removeRequest(Cronet_UrlRequestPtr rp) {
@@ -295,7 +293,6 @@ Cronet_EnginePtr Cronet_Engine_Create() {
     std::clog << dlerror() << std::endl;
     exit(EXIT_FAILURE);
   }
-  engine_count++;
   return _Cronet_Engine_Create();
 }
 

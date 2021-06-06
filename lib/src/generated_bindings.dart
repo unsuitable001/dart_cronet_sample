@@ -44,6 +44,15 @@ class Cronet {
   late final _dart_InitDartApiDL _InitDartApiDL =
       _InitDartApiDL_ptr.asFunction<_dart_InitDartApiDL>();
 
+  void unloadCronet() {
+    return _unloadCronet();
+  }
+
+  late final _unloadCronet_ptr =
+      _lookup<ffi.NativeFunction<_c_unloadCronet>>('unloadCronet');
+  late final _dart_unloadCronet _unloadCronet =
+      _unloadCronet_ptr.asFunction<_dart_unloadCronet>();
+
   ffi.Pointer<ffi.Void> Create_Executor() {
     return _Create_Executor();
   }
@@ -919,6 +928,10 @@ typedef _c_InitDartApiDL = ffi.IntPtr Function(
 typedef _dart_InitDartApiDL = int Function(
   ffi.Pointer<ffi.Void> data,
 );
+
+typedef _c_unloadCronet = ffi.Void Function();
+
+typedef _dart_unloadCronet = void Function();
 
 typedef _c_Create_Executor = ffi.Pointer<ffi.Void> Function();
 

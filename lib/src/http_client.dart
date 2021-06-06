@@ -335,6 +335,12 @@ class HttpClient {
         environment: environment);
   }
 
+  /// Unload the cronet library permanently
+  /// No further tasks on [HttpClient] can be done after executing this
+  static void destory() {
+    _cronet.unloadCronet();
+  }
+
   /// Gets Cronet's version
   String get httpClientVersion =>
       _cronet.Cronet_Engine_GetVersionString(_cronetEngine)

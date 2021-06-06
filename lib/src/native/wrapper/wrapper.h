@@ -46,6 +46,7 @@ extern "C" {
 DART_EXPORT void dispatchCallback(char* methodname);
 
 DART_EXPORT intptr_t InitDartApiDL(void* data);
+DART_EXPORT void unloadCronet();
 
 
 typedef void* ExecutorPtr;
