@@ -153,6 +153,7 @@ class HttpClient {
       if (_temp != null) {
         // deleteing non persistant storage if created
         io.Directory.fromUri(_temp!).deleteSync(recursive: true);
+        _temp = null;
       }
       // if the folder is empty, delete it.
       if (!io.File.fromUri(_loggingFile).existsSync()) {
@@ -171,6 +172,10 @@ class HttpClient {
   /// If [force] is `false` (the default) the HttpClient will be kept alive until all active connections are done. If [force] is `true` any active connections will be closed to immediately release all resources. These closed connections will receive an ~error~ cancel event to indicate that the client was shut down. In both cases trying to establish a new connection after calling close will throw an exception.
   /// NOTE: Temporary storage files (cache, cookies and logs if no explicit path is mentioned) are only deleted if you [close] the engine.
   void close({bool force = false}) {
+    if (_stop) {
+      // if already stopped, return immediately
+      return;
+    }
     if (force) {
       _stop = true;
       for (final request in _requests) {
@@ -185,8 +190,8 @@ class HttpClient {
   Uri _getUri(String host, int port, String path) {
     final _host = Uri.parse(host);
     if (!_host.hasScheme) {
-      final scheme = (_host.port == defaultHttpsPort) ? 'https://' : 'http://';
-      return Uri(scheme: scheme, host: _host.host, port: port, path: path);
+      final scheme = (port == defaultHttpsPort) ? 'https' : 'http';
+      return Uri(scheme: scheme, host: host, port: port, path: path);
     } else {
       return Uri(
           scheme: _host.scheme, host: _host.host, port: port, path: path);

@@ -19,6 +19,7 @@ dev_dependencies:
   #   sdk: flutter
   ffigen: ^2.4.2
   lints: ^1.0.1
+  test: ^1.17.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
