@@ -36,26 +36,5 @@ void main(List<String> args) {
   }
 
   final client2 = HttpClient();
-      client2
-        .getUrl(Uri.parse('http://info.cern.ch/'))
-        .then((HttpClientRequest request) {
-      request.headers
-          .set(HttpHeaders.cacheControlHeader, 'max-age=3600, must-revalidate');
-      /* The alternate API introduced.
-    NOTE: If we register callbacks & listen to the stream at the same time,
-    the stream will be closed immediately executing the onDone callback */
-
-      // request.registerCallbacks(onReadData: (contents, size, next) {
-      //   print(utf8.decoder.convert(contents));
-      //   next();
-      // }, onSuccess: () => print("cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms"));
-      client2.close();
-      return request.close();
-    }).then((Stream<List<int>> response) {
-      response.transform(utf8.decoder).listen((contents) {
-        print(contents);
-      }, onDone: () {
-        print('cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms');
-      });
-    });
+  client2.close();
 }

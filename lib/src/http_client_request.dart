@@ -55,6 +55,7 @@ class HttpClientRequest implements IOSink {
   final Pointer<Cronet_Engine> _cronetEngine;
   final _CallbackHandler _cbh;
   final Pointer<Cronet_UrlRequest> _request;
+  final Function _clientCleanup;
 
   final _headers = _HttpHeaders('1.1'); // Setting it to HTTP/1.1
   // TODO: See how that affects and do we need to change
@@ -66,14 +67,15 @@ class HttpClientRequest implements IOSink {
   /// Initiates a [HttpClientRequest]. It is meant to be used by
   /// [HttpClient]. Takes in [_uri], [_method], [_cronet] instance
   HttpClientRequest(this._uri, this._method, this._cronet, this._cronetEngine,
-      Stream<dynamic> receivePortStream, ReceivePort rp,
+      this._clientCleanup,
       {this.encoding = utf8})
-      : _cbh = _CallbackHandler(
-            _cronet, _cronet.Create_Executor(), receivePortStream),
+      : _cbh =
+            _CallbackHandler(_cronet, _cronet.Create_Executor(), ReceivePort()),
         _request = _cronet.Cronet_UrlRequest_Create() {
-          
-        _cronet.registerCallbackHandler(rp.sendPort.nativePort, _request);
-      }
+    // Register the native port to C side
+    _cronet.registerCallbackHandler(
+        _cbh.receivePort.sendPort.nativePort, _request);
+  }
 
   /// This is one of the methods to get data out of [HttpClientRequest].
   /// Accepted callbacks are [RedirectReceivedCallback],
@@ -97,6 +99,7 @@ class HttpClientRequest implements IOSink {
   /// Url Request event listners will get a cancel event
   void cancel() {
     _cronet.Cronet_UrlRequest_Cancel(_request);
+    _clientCleanup(this);
   }
 
   /// Returns the [Stream] responsible for
@@ -130,7 +133,7 @@ class HttpClientRequest implements IOSink {
           requestParams,
           _cbh.executor);
       _cronet.Cronet_UrlRequest_Start(_request);
-      _cbh.listen(_request);
+      _cbh.listen(_request, () => _clientCleanup(this));
       return _cbh.stream;
     });
   }
@@ -245,16 +248,15 @@ class HttpClientRequest implements IOSink {
 /// cronet and it's wrapper
 class _CallbackRequestMessage {
   final String method;
-  final int uuid;
   final Uint8List data;
 
-  /// Constructs [method], [uuid] (url request pointer) and [data] from [message]
+  /// Constructs [method] and [data] from [message]
   factory _CallbackRequestMessage.fromCppMessage(List<dynamic> message) {
     return _CallbackRequestMessage._(
-        message[0] as String, message[1] as int, message[2] as Uint8List);
+        message[0] as String, message[1] as Uint8List);
   }
 
-  _CallbackRequestMessage._(this.method, this.uuid, this.data);
+  _CallbackRequestMessage._(this.method, this.data);
 
   @override
   String toString() => 'CppRequest(method: $method)';
@@ -266,7 +268,7 @@ class _CallbackRequestMessage {
 ///
 ///
 class _CallbackHandler {
-  final Stream<dynamic> _receivePortStream;
+  final ReceivePort receivePort;
   final Cronet cronet;
   final Pointer<Void> executor;
 
@@ -286,7 +288,7 @@ class _CallbackHandler {
   SuccessCallabck? _onSuccess;
 
   /// Registers the [NativePort] to the cronet side.
-  _CallbackHandler(this.cronet, this.executor, this._receivePortStream);
+  _CallbackHandler(this.cronet, this.executor, this.receivePort);
 
   Stream<List<int>> get stream => _controller.stream;
 
@@ -320,27 +322,16 @@ class _CallbackHandler {
   ///
   /// This is also reponsible for providing a [Stream] of [int]
   /// to create a interface like [HttpClientResponse].
-  void listen(Pointer<Cronet_UrlRequest> reqPtr) {
-    // registers the listener on the _receivePort.
+  void listen(Pointer<Cronet_UrlRequest> reqPtr, Function cleanUpClient) {
+    // registers the listener on the receivePort.
     // The message parameter contains both the name of the event and
     // the data associated with it.
-    StreamSubscription<dynamic>? streamSub;
-    streamSub = _receivePortStream.listen((dynamic message) {
+    receivePort.listen((dynamic message) {
       final reqMessage =
           _CallbackRequestMessage.fromCppMessage(message as List);
-      final uuid = reqMessage.uuid;
       Int64List args;
       args = reqMessage.data.buffer.asInt64List();
 
-      // If http client is requested to force stop
-      if (reqMessage.method == 'force_close') {
-        cronet.Cronet_UrlRequest_Cancel(reqPtr);
-      }
-
-      // If the message isn't meant for this request
-      if (reqPtr.address != uuid) {
-        return;
-      }
       switch (reqMessage.method) {
         // Invoked when a redirect is received.
         // Currently: Passes the new location's url as parameter.
@@ -408,13 +399,14 @@ class _CallbackHandler {
         // We will shut everything down after this.
         case 'OnFailed':
           {
-            streamSub?.cancel();
+            receivePort.close();
+            cronet.removeRequest(reqPtr);
+            cleanUpClient();
             if (_onFailed != null) {
               _onFailed!();
             }
             if (_onReadData == null) {
               _controller.close();
-              cronet.removeRequest(reqPtr);
             }
           }
           break;
@@ -422,13 +414,14 @@ class _CallbackHandler {
         // We will shut everything down after this.
         case 'OnCanceled':
           {
-            streamSub?.cancel();
+            receivePort.close();
+            cronet.removeRequest(reqPtr);
+            cleanUpClient();
             if (_onCanceled != null) {
               _onCanceled!();
             }
             if (_onReadData == null) {
               _controller.close();
-              cronet.removeRequest(reqPtr);
             }
           }
           break;
@@ -437,13 +430,14 @@ class _CallbackHandler {
         // We will shut everything down after this.
         case 'OnSucceeded':
           {
-            streamSub?.cancel();
+            receivePort.close();
+            cronet.removeRequest(reqPtr);
+            cleanUpClient();
             if (_onSuccess != null) {
               _onSuccess!();
             }
             if (_onReadData == null) {
               _controller.close();
-              cronet.removeRequest(reqPtr);
             }
           }
           break;

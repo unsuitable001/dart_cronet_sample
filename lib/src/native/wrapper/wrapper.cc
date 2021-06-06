@@ -58,18 +58,13 @@ void registerCallbackHandler(Dart_Port send_port, Cronet_UrlRequestPtr rp) {
 //
 // Sent data is broken into 3 parts.
 // message[0] is the method name, which is a string
-// message[1] is the request pointer, used to identify to which request this callback belongs to
-// message[2] contains all the data to pass to that method
-void dispatchCallback(const char* methodname,Cronet_UrlRequestPtr request , Dart_CObject args) {
+// message[1] contains all the data to pass to that method
+void dispatchCallback(const char* methodname, Cronet_UrlRequestPtr request, Dart_CObject args) {
   Dart_CObject c_method_name;
   c_method_name.type = Dart_CObject_kString;
   c_method_name.value.as_string = const_cast<char *>(methodname);
 
-  Dart_CObject c_uuid;
-  c_uuid.type = Dart_CObject_kInt64;
-  c_uuid.value.as_int64 = (int64_t) request;
-
-  Dart_CObject* c_request_arr[] = {&c_method_name, &c_uuid, &args};
+  Dart_CObject* c_request_arr[] = {&c_method_name, &args};
   Dart_CObject c_request;
 
   c_request.type = Dart_CObject_kArray;
@@ -209,6 +204,7 @@ static void HttpClientDestroy(void* isolate_callback_data,
   _Cronet_Engine_Destroy(ce);
   engine_count--;
   if(requestNativePorts.size() == 0 && engine_count == 0) {
+    std::cout << "Unload Cronet" << std::endl;
     CLOSELIB(handle);
   } 
 }

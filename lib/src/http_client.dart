@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io' as io;
-import 'dart:isolate';
-import 'dart:typed_data';
 
 import 'package:cronet_sample/src/exceptions.dart';
 import 'package:ffi/ffi.dart';
@@ -53,8 +51,8 @@ class HttpClient {
       io.Directory.systemTemp.createTempSync().uri.resolve('netlog.json');
 
   final Pointer<Cronet_Engine> _cronetEngine;
-  final ReceivePort _receivePort = ReceivePort();
-  late Stream _receivePortBroadcast;
+  // Keep all the request reference in a list so if the client is being explicitly closed, we can clean up the requests.
+  final _requests = List<HttpClientRequest>.empty(growable: true);
   var _stop = false;
 
   Uri? _temp;
@@ -118,17 +116,6 @@ class HttpClient {
     _cronet.Cronet_EngineParams_accept_language_set(
         engineParams, acceptLanguage.toNativeUtf8().cast<Int8>());
 
-    // switch (cacheMode) {
-    //   case CacheMode.disk:
-    //   case CacheMode.disk_no_http:
-    //     dir = io.Directory.systemTemp.createTempSync();
-    //     _cronet.Cronet_EngineParams_storage_path_set(
-    //         engine_params, dir!.path.toNativeUtf8().cast<Int8>());
-    //     break;
-    //   default:
-    //     break;
-    // }
-
     if (cronetStorage == null) {
       // temporary and non-persistant
       cronetStorage = io.Directory.systemTemp.createTempSync();
@@ -159,40 +146,39 @@ class HttpClient {
 
     _cronet.Cronet_Engine_StartWithParams(_cronetEngine, engineParams);
     _cronet.Cronet_EngineParams_Destroy(engineParams);
+  }
 
-    // Register the native port to C side
-    // _cronet.registerCallbackHandler(_receivePort.sendPort.nativePort);
-    // Convert the recieve port stream to broadcast - for concurrent requests
-    _receivePortBroadcast =
-        _receivePort.asBroadcastStream(onListen: (streamsub) {
-      streamsub.resume();
-    }, onCancel: (streamsub) {
-      if (_stop) {
-        streamsub.cancel();
-        _receivePort.close();
-        if (_temp != null) {
-          // deleteing non persistant storage if created
-          io.Directory.fromUri(_temp!).deleteSync(recursive: true);
-        }
-        // if the folder is empty, delete it.
-        if (!io.File.fromUri(_loggingFile).existsSync()) {
-          io.File.fromUri(_loggingFile).parent.deleteSync();
-        }
-      } else {
-        streamsub.pause();
+  void _cleanUpStorage() {
+    if (_stop && _requests.isEmpty) {
+      if (_temp != null) {
+        // deleteing non persistant storage if created
+        io.Directory.fromUri(_temp!).deleteSync(recursive: true);
       }
-    });
+      // if the folder is empty, delete it.
+      if (!io.File.fromUri(_loggingFile).existsSync()) {
+        io.File.fromUri(_loggingFile).parent.deleteSync();
+      }
+    }
+  }
+
+  void _cleanUpRequests(HttpClientRequest hcr) {
+    _requests.remove(hcr);
+    _cleanUpStorage();
   }
 
   /// Shuts down the HTTP client.
   ///
   /// If [force] is `false` (the default) the HttpClient will be kept alive until all active connections are done. If [force] is `true` any active connections will be closed to immediately release all resources. These closed connections will receive an ~error~ cancel event to indicate that the client was shut down. In both cases trying to establish a new connection after calling close will throw an exception.
+  /// NOTE: Temporary storage files (cache, cookies and logs if no explicit path is mentioned) are only deleted if you [close] the engine.
   void close({bool force = false}) {
     if (force) {
       _stop = true;
-      _receivePort.sendPort.send(['force_close', 0, Uint8List(0)]);
+      for (final request in _requests) {
+        request.cancel();
+      }
     } else {
       _stop = true;
+      _cleanUpStorage();
     }
   }
 
@@ -215,8 +201,9 @@ class HttpClient {
       if (_stop) {
         throw Exception("Client is closed. Can't open new connections");
       }
-      return HttpClientRequest(
-          url, method, _cronet, _cronetEngine, _receivePortBroadcast, _receivePort);
+      _requests.add(HttpClientRequest(
+          url, method, _cronet, _cronetEngine, _cleanUpRequests));
+      return _requests.last;
     });
   }
 
