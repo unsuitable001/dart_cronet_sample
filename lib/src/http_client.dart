@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:ffi';
 import 'dart:io' as io;
 
@@ -152,8 +153,14 @@ class HttpClient {
     if (_stop && _requests.isEmpty) {
       if (_temp != null) {
         // deleteing non persistant storage if created
-        io.Directory.fromUri(_temp!).deleteSync(recursive: true);
-        _temp = null;
+        if (io.Directory.fromUri(_temp!).existsSync()) {
+          try {
+            io.Directory.fromUri(_temp!).deleteSync(recursive: true);
+            _temp = null;
+          } catch (e) {
+            log("Can't delete the file", error: e);
+          }
+        }
       }
       // if the folder is empty, delete it.
       if (!io.File.fromUri(_loggingFile).existsSync()) {
@@ -164,7 +171,6 @@ class HttpClient {
 
   void _cleanUpRequests(HttpClientRequest hcr) {
     _requests.remove(hcr);
-    _cleanUpStorage();
   }
 
   /// Shuts down the HTTP client.
@@ -183,8 +189,8 @@ class HttpClient {
       }
     } else {
       _stop = true;
-      _cleanUpStorage();
     }
+    _cleanUpStorage();
   }
 
   Uri _getUri(String host, int port, String path) {
@@ -333,12 +339,6 @@ class HttpClient {
       {Map<String, String>? environment}) {
     return io.HttpClient.findProxyFromEnvironment(url,
         environment: environment);
-  }
-
-  /// Unload the cronet library permanently
-  /// No further tasks on [HttpClient] can be done after executing this
-  static void destory() {
-    _cronet.unloadCronet();
   }
 
   /// Gets Cronet's version
