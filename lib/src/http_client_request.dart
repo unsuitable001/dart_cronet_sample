@@ -102,6 +102,8 @@ class HttpClientRequest implements IOSink {
   ///
   /// Throws [Exception] if request is already aborted using [abort].
   ///
+  /// Throws [UrlRequestException] if request can't be initiated.
+  ///
   /// Consumable similar to [HttpClientResponse]
   @override
   Future<Stream<List<int>>> close() {
@@ -125,13 +127,21 @@ class HttpClientRequest implements IOSink {
           _cronet.Cronet_HttpHeader_Destroy(headerPtr);
         }
       });
-      _cronet.Cronet_UrlRequest_Init(
+      final res = _cronet.Cronet_UrlRequest_Init(
           _request,
           _cronetEngine,
           _uri.toString().toNativeUtf8().cast<Int8>(),
           requestParams,
           _cbh.executor);
-      _cronet.Cronet_UrlRequest_Start(_request);
+
+      if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
+        throw UrlRequestException(res);
+      }
+
+      final res2 = _cronet.Cronet_UrlRequest_Start(_request);
+      if (res2 != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
+        throw UrlRequestException(res2);
+      }
       _cbh.listen(_request, () => _clientCleanup(this));
       return _cbh.stream;
     });
@@ -340,7 +350,10 @@ class _CallbackHandler {
           {
             log('New Location: ${Pointer.fromAddress(args[0]).cast<Utf8>().toDartString()}');
             if (followRedirects && maxRedirects > 0) {
-              cronet.Cronet_UrlRequest_FollowRedirect(reqPtr);
+              final res = cronet.Cronet_UrlRequest_FollowRedirect(reqPtr);
+              if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
+                throw UrlRequestException(res);
+              }
               maxRedirects--;
             } else {
               cronet.Cronet_UrlRequest_Cancel(reqPtr);
@@ -385,13 +398,20 @@ class _CallbackHandler {
 
             // invoke the callback
             if (_onReadData != null) {
-              _onReadData!(data.toList(growable: false), bytesRead,
-                  () => cronet.Cronet_UrlRequest_Read(request, buffer));
+              _onReadData!(data.toList(growable: false), bytesRead, () {
+                final res = cronet.Cronet_UrlRequest_Read(request, buffer);
+                if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
+                  throw UrlRequestException(res);
+                }
+              });
             } else {
               // or, add data to the stream
               // why .toList - SEE ISSUE #8
               _controller.sink.add(data.toList(growable: false));
-              cronet.Cronet_UrlRequest_Read(request, buffer);
+              final res = cronet.Cronet_UrlRequest_Read(request, buffer);
+              if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
+                throw UrlRequestException(res);
+              }
             }
           }
           break;

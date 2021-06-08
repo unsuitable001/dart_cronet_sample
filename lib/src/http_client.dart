@@ -75,6 +75,8 @@ class HttpClient {
   /// 7. If caches and cookies should persist, provide a directory using [cronetStorage]. Keeping it null will use
   /// a temporary, non persistant storage.
   ///
+  /// Throws [CronetException] if [HttpClient] can't be created.
+  ///
   /// Breaking Changes from `dart:io` based library:
   ///
   /// 1. [userAgent] property must be set when constructing [HttpClient] and can't be changed afterwards.
@@ -145,7 +147,11 @@ class HttpClient {
           engineParams, 10 * 1024);
     }
 
-    _cronet.Cronet_Engine_StartWithParams(_cronetEngine, engineParams);
+    final res =
+        _cronet.Cronet_Engine_StartWithParams(_cronetEngine, engineParams);
+    if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
+      throw CronetException(res);
+    }
     _cronet.Cronet_EngineParams_Destroy(engineParams);
   }
 

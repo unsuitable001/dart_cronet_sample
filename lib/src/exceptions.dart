@@ -1,7 +1,7 @@
 import 'dart:io';
 
 class LoggingException implements Exception {
-  LoggingException();
+  const LoggingException();
 }
 
 class HttpException implements IOException {
@@ -19,4 +19,21 @@ class HttpException implements IOException {
     }
     return b.toString();
   }
+}
+
+class CronetException implements Exception {
+  final int val;
+  const CronetException(this.val);
+
+  @override
+  String toString() {
+    final b = StringBuffer()
+      ..write('CronetException: Cronet Result: ')
+      ..write(val);
+    return b.toString();
+  }
+}
+
+class UrlRequestException extends CronetException {
+  const UrlRequestException(int val) : super(val);
 }
