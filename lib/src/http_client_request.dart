@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
@@ -56,6 +57,7 @@ class HttpClientRequest implements IOSink {
   final _CallbackHandler _cbh;
   final Pointer<Cronet_UrlRequest> _request;
   final Function _clientCleanup;
+  bool _isAborted = false;
 
   final _headers = _HttpHeaders('1.1'); // Setting it to HTTP/1.1
   // TODO: See how that affects and do we need to change
@@ -94,22 +96,19 @@ class HttpClientRequest implements IOSink {
         onFailed, onCanceled, onSuccess);
   }
 
-  /// Cancels the ongoing url request
-  ///
-  /// Url Request event listners will get a cancel event
-  void cancel() {
-    _cronet.Cronet_UrlRequest_Cancel(_request);
-    _clientCleanup(this);
-  }
-
   /// Returns the [Stream] responsible for
   /// emitting data received from the server
   /// by cronet.
+  ///
+  /// Throws [Exception] if request is already aborted using [abort].
   ///
   /// Consumable similar to [HttpClientResponse]
   @override
   Future<Stream<List<int>>> close() {
     return Future(() {
+      if (_isAborted) {
+        throw Exception('Request is already aborted');
+      }
       _headers._finalize(); // making headers immutable
       final requestParams = _cronet.Cronet_UrlRequestParams_Create();
       _cronet.Cronet_UrlRequestParams_http_method_set(
@@ -149,14 +148,16 @@ class HttpClientRequest implements IOSink {
   ///
   /// If the [Stream] is closed, aborting has no effect.
   void abort([Object? exception, StackTrace? stackTrace]) {
-    if (!_cbh._controller.isClosed) {
-      _cbh._controller.close().whenComplete(() {
-        print(stackTrace ?? StackTrace.empty);
-        if (exception is Exception) {
-          throw exception;
-        }
-      });
-    }
+    if (_isAborted) return;
+    _isAborted = true;
+    _cronet.Cronet_UrlRequest_Cancel(_request);
+    _clientCleanup(this);
+    _cbh._controller.done.then((dynamic _) {
+      log('client aborted: ', stackTrace: stackTrace);
+      if (exception is Exception) {
+        throw exception;
+      }
+    });
   }
 
   /// Done is same as [close]. A [Stream<List<int>>] future that will complete once the response is available.
@@ -337,8 +338,7 @@ class _CallbackHandler {
         // Currently: Passes the new location's url as parameter.
         case 'OnRedirectReceived':
           {
-            print(
-                'New Location: ${Pointer.fromAddress(args[0]).cast<Utf8>().toDartString()}');
+            log('New Location: ${Pointer.fromAddress(args[0]).cast<Utf8>().toDartString()}');
             if (followRedirects && maxRedirects > 0) {
               cronet.Cronet_UrlRequest_FollowRedirect(reqPtr);
               maxRedirects--;
@@ -355,7 +355,7 @@ class _CallbackHandler {
         // When server has sent the initial response
         case 'OnResponseStarted':
           {
-            print('Response started');
+            log('Response started');
             if (_onResponseStarted != null) {
               _onResponseStarted!();
             }
@@ -377,7 +377,7 @@ class _CallbackHandler {
             final buffer = Pointer<Cronet_Buffer>.fromAddress(args[2]);
             final bytesRead = args[3];
 
-            print('Recieved: $bytesRead');
+            log('Recieved: $bytesRead');
 
             final data = cronet.Cronet_Buffer_GetData(buffer)
                 .cast<Uint8>()
@@ -447,7 +447,7 @@ class _CallbackHandler {
           }
       }
     }, onError: (Object error) {
-      print(error);
+      log(error.toString());
     });
   }
 }

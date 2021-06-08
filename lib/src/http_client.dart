@@ -182,13 +182,13 @@ class HttpClient {
       // if already stopped, return immediately
       return;
     }
+    _stop = true;
     if (force) {
-      _stop = true;
-      for (final request in _requests) {
-        request.cancel();
+      final requests = _requests
+          .toList(); // deep copy the list as the main list will be modified when aborting requests
+      for (final request in requests) {
+        request.abort();
       }
-    } else {
-      _stop = true;
     }
     _cleanUpStorage();
   }

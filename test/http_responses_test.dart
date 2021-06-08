@@ -21,14 +21,14 @@ void main() {
     final request = await client.getUrl(Uri.parse('http://localhost:5252'));
     final resp = await request.close();
     final dataStream = resp.transform(utf8.decoder);
-    expect(dataStream, emitsInOrder(<dynamic>[sentData, emitsDone]));
+    expect(dataStream, emitsInOrder(<dynamic>[equals(sentData), emitsDone]));
   });
 
   test('Gets Hello, world response from server using get method', () async {
     final request = await client.get('localhost', 5252, '/');
     final resp = await request.close();
     final dataStream = resp.transform(utf8.decoder);
-    expect(dataStream, emitsInOrder(<dynamic>[sentData, emitsDone]));
+    expect(dataStream, emitsInOrder(<dynamic>[equals(sentData), emitsDone]));
   });
 
   test('Gets Hello, world response from server using openUrl method', () async {
@@ -36,27 +36,7 @@ void main() {
         await client.openUrl('GET', Uri.parse('http://localhost:5252'));
     final resp = await request.close();
     final dataStream = resp.transform(utf8.decoder);
-    expect(dataStream, emitsInOrder(<dynamic>[sentData, emitsDone]));
-  });
-
-  test('Opening new request after client close throws exception', () async {
-    client.close();
-    expect(
-        () async =>
-            await client.openUrl('GET', Uri.parse('http://localhost:5252')),
-        throwsException);
-  });
-
-  test(
-      'Closing the HttpClient after starting a request keeps the previous connection alive',
-      () async {
-    final client2 = HttpClient();
-    final request =
-        await client.openUrl('GET', Uri.parse('http://localhost:5252'));
-    client2.close();
-    final resp = await request.close();
-    final dataStream = resp.transform(utf8.decoder);
-    expect(dataStream, emitsInOrder(<dynamic>[sentData, emitsDone]));
+    expect(dataStream, emitsInOrder(<dynamic>[equals(sentData), emitsDone]));
   });
 
   // TODO: Implementing exception classes
