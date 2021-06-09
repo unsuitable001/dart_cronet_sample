@@ -6,7 +6,7 @@
 #include "sample_executor.h"
 #include <iostream>
 #include <stdarg.h>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 // Set CRONET_VERSION from build script
 
@@ -35,7 +35,7 @@ intptr_t InitDartApiDL(void* data) {
 
 // loading cronet
 LIBTYPE handle = OPENLIB(CRONET_LIB_NAME);
-std::tr1::unordered_map<Cronet_UrlRequestPtr, Dart_Port> requestNativePorts;
+std::unordered_map<Cronet_UrlRequestPtr, Dart_Port> requestNativePorts;
 
 static void FreeFinalizer(void*, void* value) {
   free(value);
@@ -218,6 +218,16 @@ void registerHttpClient(Dart_Handle h, Cronet_EnginePtr ce) {
   Dart_NewFinalizableHandle_DL(h, peer, size, HttpClientDestroy);
 }
 
+
+
+P_IMPORT(int32_t, Cronet_UrlResponseInfo_http_status_code_get, const Cronet_UrlResponseInfoPtr);
+int32_t Cronet_UrlResponseInfo_http_status_code_get(const Cronet_UrlResponseInfoPtr self) {return _Cronet_UrlResponseInfo_http_status_code_get(self);}
+
+
+P_IMPORT(Cronet_String, Cronet_UrlResponseInfo_http_status_text_get, const Cronet_UrlResponseInfoPtr);
+Cronet_String Cronet_UrlResponseInfo_http_status_text_get(const Cronet_UrlResponseInfoPtr self) {return _Cronet_UrlResponseInfo_http_status_text_get(self);}
+
+
 /* URL Callbacks Implementations */
 
 void OnRedirectReceived(
@@ -225,7 +235,7 @@ void OnRedirectReceived(
     Cronet_UrlRequestPtr request,
     Cronet_UrlResponseInfoPtr info,
     Cronet_String newLocationUrl) {
-    dispatchCallback("OnRedirectReceived",request, callbackArgBuilder(1, newLocationUrl));
+    dispatchCallback("OnRedirectReceived",request, callbackArgBuilder(2, newLocationUrl, info));
 }
 
 void OnResponseStarted(
@@ -237,7 +247,7 @@ void OnResponseStarted(
   Cronet_BufferPtr buffer = _Cronet_Buffer_Create();
   _Cronet_Buffer_InitWithAlloc(buffer, 32 * 1024);
 
-  dispatchCallback("OnResponseStarted",request, callbackArgBuilder(0));
+  dispatchCallback("OnResponseStarted",request, callbackArgBuilder(1, info));
 
   // Started reading the response.
   _Cronet_UrlRequest_Read(request, buffer);
@@ -258,8 +268,7 @@ void OnReadCompleted(
 void OnSucceeded(Cronet_UrlRequestCallbackPtr self, Cronet_UrlRequestPtr request, Cronet_UrlResponseInfoPtr info) {
   printf("OnSucceeded");
   std::cout << "OnSucceeded called." << std::endl;
-  dispatchCallback("OnSucceeded",request, callbackArgBuilder(0));
-  std:: cout << "Info: Rcvd bytes " << _Cronet_UrlResponseInfo_received_byte_count_get(info) << std::endl;
+  dispatchCallback("OnSucceeded",request, callbackArgBuilder(1, info));
 }
 
 void OnFailed(
@@ -268,8 +277,7 @@ void OnFailed(
     Cronet_UrlResponseInfoPtr info,
     Cronet_ErrorPtr error) {
       printf("OnFailed");
-  printf("%s",_Cronet_Error_message_get(error));
-  dispatchCallback("OnFailed",request, callbackArgBuilder(1, error));
+  dispatchCallback("OnFailed",request, callbackArgBuilder(1, _Cronet_Error_message_get(error)));
 }
 
 void OnCanceled(
@@ -277,7 +285,7 @@ void OnCanceled(
     Cronet_UrlRequestPtr request,
     Cronet_UrlResponseInfoPtr info) {
       printf("OnCanceled");
-      dispatchCallback("OnFailed",request, callbackArgBuilder(0));
+      dispatchCallback("OnCanceled",request, callbackArgBuilder(0));
 }
 
 

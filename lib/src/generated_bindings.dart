@@ -689,6 +689,38 @@ class Cronet {
       _Cronet_HttpHeader_value_set_ptr.asFunction<
           _dart_Cronet_HttpHeader_value_set>();
 
+  int Cronet_UrlResponseInfo_http_status_code_get(
+    ffi.Pointer<Cronet_UrlResponseInfo> self,
+  ) {
+    return _Cronet_UrlResponseInfo_http_status_code_get(
+      self,
+    );
+  }
+
+  late final _Cronet_UrlResponseInfo_http_status_code_get_ptr = _lookup<
+          ffi.NativeFunction<_c_Cronet_UrlResponseInfo_http_status_code_get>>(
+      'Cronet_UrlResponseInfo_http_status_code_get');
+  late final _dart_Cronet_UrlResponseInfo_http_status_code_get
+      _Cronet_UrlResponseInfo_http_status_code_get =
+      _Cronet_UrlResponseInfo_http_status_code_get_ptr.asFunction<
+          _dart_Cronet_UrlResponseInfo_http_status_code_get>();
+
+  ffi.Pointer<ffi.Int8> Cronet_UrlResponseInfo_http_status_text_get(
+    ffi.Pointer<Cronet_UrlResponseInfo> self,
+  ) {
+    return _Cronet_UrlResponseInfo_http_status_text_get(
+      self,
+    );
+  }
+
+  late final _Cronet_UrlResponseInfo_http_status_text_get_ptr = _lookup<
+          ffi.NativeFunction<_c_Cronet_UrlResponseInfo_http_status_text_get>>(
+      'Cronet_UrlResponseInfo_http_status_text_get');
+  late final _dart_Cronet_UrlResponseInfo_http_status_text_get
+      _Cronet_UrlResponseInfo_http_status_text_get =
+      _Cronet_UrlResponseInfo_http_status_text_get_ptr.asFunction<
+          _dart_Cronet_UrlResponseInfo_http_status_text_get>();
+
   int Cronet_Buffer_GetSize(
     ffi.Pointer<Cronet_Buffer> self,
   ) {
@@ -1288,6 +1320,24 @@ typedef _c_Cronet_HttpHeader_value_set = ffi.Void Function(
 typedef _dart_Cronet_HttpHeader_value_set = void Function(
   ffi.Pointer<Cronet_HttpHeader> self,
   ffi.Pointer<ffi.Int8> value,
+);
+
+typedef _c_Cronet_UrlResponseInfo_http_status_code_get = ffi.Int32 Function(
+  ffi.Pointer<Cronet_UrlResponseInfo> self,
+);
+
+typedef _dart_Cronet_UrlResponseInfo_http_status_code_get = int Function(
+  ffi.Pointer<Cronet_UrlResponseInfo> self,
+);
+
+typedef _c_Cronet_UrlResponseInfo_http_status_text_get = ffi.Pointer<ffi.Int8>
+    Function(
+  ffi.Pointer<Cronet_UrlResponseInfo> self,
+);
+
+typedef _dart_Cronet_UrlResponseInfo_http_status_text_get
+    = ffi.Pointer<ffi.Int8> Function(
+  ffi.Pointer<Cronet_UrlResponseInfo> self,
 );
 
 typedef _c_Cronet_Buffer_GetSize = ffi.Uint64 Function(

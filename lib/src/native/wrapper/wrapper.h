@@ -354,6 +354,13 @@ CRONET_EXPORT
 void Cronet_HttpHeader_value_set(Cronet_HttpHeaderPtr self,
                                  const Cronet_String value);
 
+CRONET_EXPORT
+int32_t Cronet_UrlResponseInfo_http_status_code_get(
+    const Cronet_UrlResponseInfoPtr self);
+CRONET_EXPORT
+Cronet_String Cronet_UrlResponseInfo_http_status_text_get(
+    const Cronet_UrlResponseInfoPtr self);
+
 // Create an instance of Cronet_Buffer.
 // CRONET_EXPORT Cronet_BufferPtr Cronet_Buffer_Create(void);
 

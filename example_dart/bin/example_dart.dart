@@ -18,10 +18,11 @@ void main(List<String> args) {
     NOTE: If we register callbacks & listen to the stream at the same time,
     the stream will be closed immediately executing the onDone callback */
 
-      // request.registerCallbacks(onReadData: (contents, size, next) {
+      // request.registerCallbacks(onReadData: (contents, size, responseCode, next) {
       //   print(utf8.decoder.convert(contents));
+      //   print('Status: $responseCode')
       //   next();
-      // }, onSuccess: () => print("cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms"));
+      // }, onSuccess: (responseCode) => print("cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms"));
       if (i == 2) {
         client.close(); // We will shut down the client after 3 connections.
       }

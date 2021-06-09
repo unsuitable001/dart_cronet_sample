@@ -61,10 +61,11 @@ import 'package:cronet_sample/cronet_sample.dart';
     NOTE: If we register callbacks & listen to the stream at the same time,
     the stream will be closed immediately executing the onDone callback */
 
-    // request.registerCallbacks(onReadData: (contents, size, next) {
+    // request.registerCallbacks(onReadData: (contents, size, responseCode, next) {
     //   print(utf8.decoder.convert(contents));
+    //   print('Status: $responseCode')
     //   next();
-    // }, onSuccess: () => print("Done!"));
+    // }, onSuccess: (responseCode) => print('Done! Status: $responseCode'));
 
     return request.close();
   }).then((Stream<List<int>> response) {
