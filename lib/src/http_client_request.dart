@@ -343,10 +343,17 @@ class _CallbackHandler {
     if (!(respCode >= lBound && respCode <= uBound)) {
       // if NOT in range
       callback();
-      throw HttpException(
+      final exception = HttpException(
           cronet.Cronet_UrlResponseInfo_http_status_text_get(respInfoPtr)
               .cast<Utf8>()
               .toDartString());
+
+      if (_controller.isClosed) {
+        throw exception;
+      } else {
+        _controller.addError(exception);
+        _controller.close();
+      }
     }
     return respCode;
   }
