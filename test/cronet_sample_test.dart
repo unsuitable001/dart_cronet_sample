@@ -9,6 +9,11 @@ void main() {
     client = HttpClient();
   });
 
+  test('Validate static constants', () {
+    expect(80, equals(HttpClient.defaultHttpPort));
+    expect(443, equals(HttpClient.defaultHttpsPort));
+  });
+
   test('Loads cronet engine and gets the version string', () {
     expect(client.httpClientVersion, TypeMatcher<String>());
   });
@@ -60,8 +65,6 @@ void main() {
     client.close();
     expect(logFile.existsSync(), equals(true));
   });
-
-  // TODO: Implementing exception classes for engine creating failure
 
   tearDown(() {
     client.close();

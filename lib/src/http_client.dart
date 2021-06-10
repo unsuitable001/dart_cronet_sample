@@ -88,7 +88,7 @@ class HttpClient {
       this.brotli = true,
       this.acceptLanguage = 'en_US',
       this.cacheMode = CacheMode.inMemory,
-      this.maxCache = 100 * 1024,
+      this.maxCache = 10 * 1024,
       io.Directory? cronetStorage})
       : _cronetEngine = _cronet.Cronet_Engine_Create() {
     // Initialize Dart Native API dynamically
@@ -141,10 +141,6 @@ class HttpClient {
     if (maxCache != null) {
       _cronet.Cronet_EngineParams_http_cache_max_size_set(
           engineParams, maxCache!);
-    } else if (cacheMode == CacheMode.inMemory) {
-      // if cache size isn't set and it's in memory cache
-      _cronet.Cronet_EngineParams_http_cache_max_size_set(
-          engineParams, 10 * 1024);
     }
 
     final res =

@@ -7,13 +7,4 @@ analyzer:
   exclude:
     - example/**
     - lib/third_party/**     # may not be fully migrated
-    - lib/cronet_sample.dart # due to method channel
     - lib/src/generated_bindings.dart # ignore generated files
-linter:
-  rules:
-    avoid_print: false  # for now. Will enable this after writing tests
-    directives_ordering: true
-    prefer_final_fields: true
-    prefer_final_locals: true
-    prefer_final_in_for_each: true
-    unnecessary_brace_in_string_interps: true
