@@ -133,7 +133,11 @@ class HttpClient {
     }
 
     _cronet.Cronet_EngineParams_storage_path_set(
-        engineParams, cronetStorage.path.toNativeUtf8().cast<Int8>());
+        engineParams,
+        cronetStorage.uri
+            .toFilePath(windows: io.Platform.isWindows)
+            .toNativeUtf8()
+            .cast<Int8>());
 
     _cronet.Cronet_EngineParams_http_cache_mode_set(
         engineParams, cacheMode.index);
@@ -319,10 +323,16 @@ class HttpClient {
   ///
   /// If logging can't be started, then a [LoggingException] will be thrown
   set enableTimelineLogging(bool enable) {
-    io.File.fromUri(_loggingFile).createSync();
+    if (_enableTimelineLogging == enable) return; // if unchanged, skip
+    io.File.fromUri(_loggingFile).createSync(recursive: true);
     if (enable) {
       if (!_cronet.Cronet_Engine_StartNetLogToFile(
-          _cronetEngine, _loggingFile.path.toNativeUtf8().cast<Int8>(), true)) {
+          _cronetEngine,
+          _loggingFile
+              .toFilePath(windows: io.Platform.isWindows)
+              .toNativeUtf8()
+              .cast<Int8>(),
+          true)) {
         throw LoggingException();
       }
     } else {
