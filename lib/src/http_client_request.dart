@@ -16,13 +16,14 @@ import 'generated_bindings.dart';
 part '../third_party/http_headers.dart';
 part '../third_party/http_date.dart';
 part 'http_client_response.dart';
+part 'http_callback_handler.dart';
 
 // Type definitions for various callbacks
 typedef RedirectReceivedCallback = void Function(
     String newLocationUrl, int responseCode);
 typedef ResponseStartedCallback = void Function(int responseCode);
 typedef ReadDataCallback = void Function(List<int> data, int bytesRead,
-    int responseCode, Function read); // onReadComplete may confuse people
+    int responseCode, Function next); // onReadComplete may confuse people
 typedef FailedCallabck = void Function(HttpException exception);
 typedef CanceledCallabck = void Function();
 typedef SuccessCallabck = void Function(int responseCode);
@@ -32,7 +33,7 @@ typedef SuccessCallabck = void Function(int responseCode);
 /// It handles all of the Http Requests made by [HttpClient].
 ///
 /// Provides two ways to get data from the request.
-/// [registerCallbacks] or a [Stream] of [List] of [int] like [HttpClientResponse].
+/// [registerCallbacks] or a [HttpClientResponse] which is a [Stream<List<int>>].
 ///
 /// Either of them can be used at a time.
 ///
@@ -43,7 +44,7 @@ typedef SuccessCallabck = void Function(int responseCode);
 /// client.getUrl(Uri.parse('https://example.com/'))
 ///   .then((HttpClientRequest request) {
 ///   return request.close();
-/// }).then((Stream<List<int>> response) {
+/// }).then((HttpClientResponse response) {
 ///   // Here you got the raw data.
 ///   // Use it as you like.
 /// });
@@ -61,9 +62,9 @@ class HttpClientRequest implements IOSink {
   final Function _clientCleanup;
   bool _isAborted = false;
 
-  final _headers = _HttpHeaders('1.1'); // Setting it to HTTP/1.1
   // TODO: See how that affects and do we need to change
   // Negotiated protocol info is only available via Cronet_UrlResponseInfo
+  final _headers = _HttpHeaders('1.1'); // Setting it to HTTP/1.1
 
   @override
   Encoding encoding;
@@ -81,21 +82,62 @@ class HttpClientRequest implements IOSink {
         _cbh.receivePort.sendPort.nativePort, _request);
   }
 
+  // Starts the request
+  void _startRequest() {
+    if (_isAborted) {
+      throw Exception('Request is already aborted');
+    }
+    _headers._finalize(); // making headers immutable
+    final requestParams = _cronet.Cronet_UrlRequestParams_Create();
+    _cronet.Cronet_UrlRequestParams_http_method_set(
+        requestParams, _method.toNativeUtf8().cast<Int8>());
+    headers.forEach((name, values) {
+      for (final value in values) {
+        final headerPtr = _cronet.Cronet_HttpHeader_Create();
+        _cronet.Cronet_HttpHeader_name_set(
+            headerPtr, name.toNativeUtf8().cast<Int8>());
+        _cronet.Cronet_HttpHeader_value_set(
+            headerPtr, value.toNativeUtf8().cast<Int8>());
+        _cronet.Cronet_UrlRequestParams_request_headers_add(
+            requestParams, headerPtr);
+        _cronet.Cronet_HttpHeader_Destroy(headerPtr);
+      }
+    });
+    final res = _cronet.Cronet_UrlRequest_Init(
+        _request,
+        _cronetEngine,
+        _uri.toString().toNativeUtf8().cast<Int8>(),
+        requestParams,
+        _cbh.executor);
+
+    if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
+      throw UrlRequestException(res);
+    }
+
+    final res2 = _cronet.Cronet_UrlRequest_Start(_request);
+    if (res2 != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
+      throw UrlRequestException(res2);
+    }
+    _cbh.listen(_request, () => _clientCleanup(this));
+  }
+
   /// This is one of the methods to get data out of [HttpClientRequest].
   /// Accepted callbacks are [RedirectReceivedCallback],
   /// [ResponseStartedCallback], [ReadDataCallback], [FailedCallabck],
   /// [CanceledCallabck] and [SuccessCallabck].
   ///
   /// Callbacks will be called as per sequence of the events.
-  void registerCallbacks(
+  ///If callbacks are registered, the [Stream] returned by [close] will be closed.
+  Future<void> registerCallbacks(ReadDataCallback onReadData,
       {RedirectReceivedCallback? onRedirectReceived,
       ResponseStartedCallback? onResponseStarted,
-      ReadDataCallback? onReadData,
       FailedCallabck? onFailed,
       CanceledCallabck? onCanceled,
       SuccessCallabck? onSuccess}) {
-    _cbh.registerCallbacks(onRedirectReceived, onResponseStarted, onReadData,
-        onFailed, onCanceled, onSuccess);
+    final rc = _cbh.registerCallbacks(onReadData, onRedirectReceived,
+        onResponseStarted, onFailed, onCanceled, onSuccess);
+    _startRequest();
+    return rc;
   }
 
   /// Returns the [Stream] responsible for
@@ -110,41 +152,7 @@ class HttpClientRequest implements IOSink {
   @override
   Future<HttpClientResponse> close() {
     return Future(() {
-      if (_isAborted) {
-        throw Exception('Request is already aborted');
-      }
-      _headers._finalize(); // making headers immutable
-      final requestParams = _cronet.Cronet_UrlRequestParams_Create();
-      _cronet.Cronet_UrlRequestParams_http_method_set(
-          requestParams, _method.toNativeUtf8().cast<Int8>());
-      headers.forEach((name, values) {
-        for (final value in values) {
-          final headerPtr = _cronet.Cronet_HttpHeader_Create();
-          _cronet.Cronet_HttpHeader_name_set(
-              headerPtr, name.toNativeUtf8().cast<Int8>());
-          _cronet.Cronet_HttpHeader_value_set(
-              headerPtr, value.toNativeUtf8().cast<Int8>());
-          _cronet.Cronet_UrlRequestParams_request_headers_add(
-              requestParams, headerPtr);
-          _cronet.Cronet_HttpHeader_Destroy(headerPtr);
-        }
-      });
-      final res = _cronet.Cronet_UrlRequest_Init(
-          _request,
-          _cronetEngine,
-          _uri.toString().toNativeUtf8().cast<Int8>(),
-          requestParams,
-          _cbh.executor);
-
-      if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
-        throw UrlRequestException(res);
-      }
-
-      final res2 = _cronet.Cronet_UrlRequest_Start(_request);
-      if (res2 != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
-        throw UrlRequestException(res2);
-      }
-      _cbh.listen(_request, () => _clientCleanup(this));
+      _startRequest();
       return HttpClientResponse._(_cbh.stream);
     });
   }
@@ -272,258 +280,4 @@ class _CallbackRequestMessage {
 
   @override
   String toString() => 'CppRequest(method: $method)';
-}
-
-/// Handles every kind of callbacks that are
-/// invoked by messages and data that are sent by
-/// [NativePort] from native cronet library.
-///
-///
-class _CallbackHandler {
-  final ReceivePort receivePort;
-  final Cronet cronet;
-  final Pointer<Void> executor;
-
-  // These are a part of HttpClientRequest Public API
-  bool followRedirects = true;
-  int maxRedirects = 5;
-
-  /// Stream controller to allow consumption of data
-  /// like [HttpClientResponse]
-  final _controller = StreamController<List<int>>();
-
-  RedirectReceivedCallback? _onRedirectReceived;
-  ResponseStartedCallback? _onResponseStarted;
-  ReadDataCallback? _onReadData;
-  FailedCallabck? _onFailed;
-  CanceledCallabck? _onCanceled;
-  SuccessCallabck? _onSuccess;
-
-  /// Registers the [NativePort] to the cronet side.
-  _CallbackHandler(this.cronet, this.executor, this.receivePort);
-
-  Stream<List<int>> get stream => _controller.stream;
-
-  /// This sets callbacks that are registered using
-  /// [HttpClientRequest.registerCallbacks].
-  ///
-  /// If [ReadDataCallback] is provided, close the [_controller].
-  void registerCallbacks(
-      [RedirectReceivedCallback? onRedirectReceived,
-      ResponseStartedCallback? onResponseStarted,
-      ReadDataCallback? onReadData,
-      FailedCallabck? onFailed,
-      CanceledCallabck? onCanceled,
-      SuccessCallabck? onSuccess]) {
-    _onRedirectReceived = onRedirectReceived;
-    _onResponseStarted = onResponseStarted;
-    _onReadData = onReadData;
-    if (_onReadData != null) {
-      _controller.close();
-    }
-    _onFailed = onFailed;
-    _onCanceled = onCanceled;
-    _onSuccess = onSuccess;
-  }
-
-  // clean up tasks for a request
-  // need to call then whenever we are done with the request
-  // either successfully or unsuccessfully.
-  void cleanUpRequest(
-      Pointer<Cronet_UrlRequest> reqPtr, Function cleanUpClient) {
-    receivePort.close();
-    cronet.removeRequest(reqPtr);
-    cleanUpClient();
-  }
-
-  int statusChecker(Pointer<Cronet_UrlResponseInfo> respInfoPtr, int lBound,
-      int uBound, Function callback) {
-    final respCode =
-        cronet.Cronet_UrlResponseInfo_http_status_code_get(respInfoPtr);
-    if (!(respCode >= lBound && respCode <= uBound)) {
-      // if NOT in range
-      callback();
-      final exception = HttpException(
-          cronet.Cronet_UrlResponseInfo_http_status_text_get(respInfoPtr)
-              .cast<Utf8>()
-              .toDartString());
-
-      if (_controller.isClosed) {
-        throw exception;
-      } else {
-        _controller.addError(exception);
-        _controller.close();
-      }
-    }
-    return respCode;
-  }
-
-  /// This listens to the messages sent by native cronet library
-  /// through wrapper via [NativePort].
-  ///
-  /// This also invokes the appropriate callbacks that are registered
-  /// according to the network events sent from cronet side.
-  ///
-  /// This is also reponsible for providing a [Stream] of [int]
-  /// to create a interface like [HttpClientResponse].
-  void listen(Pointer<Cronet_UrlRequest> reqPtr, Function cleanUpClient) {
-    // registers the listener on the receivePort.
-    // The message parameter contains both the name of the event and
-    // the data associated with it.
-    receivePort.listen((dynamic message) {
-      final reqMessage =
-          _CallbackRequestMessage.fromCppMessage(message as List);
-      Int64List args;
-      args = reqMessage.data.buffer.asInt64List();
-
-      switch (reqMessage.method) {
-        // Invoked when a redirect is received.
-        // Passes the new location's url and response code as parameter
-        case 'OnRedirectReceived':
-          {
-            log('New Location: ${Pointer.fromAddress(args[0]).cast<Utf8>().toDartString()}');
-            final respCode = statusChecker(
-                Pointer.fromAddress(args[1]).cast<Cronet_UrlResponseInfo>(),
-                300,
-                399,
-                () => cleanUpRequest(reqPtr,
-                    cleanUpClient)); // If NOT a 3XX status code, throw Exception
-            if (followRedirects && maxRedirects > 0) {
-              final res = cronet.Cronet_UrlRequest_FollowRedirect(reqPtr);
-              if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
-                cleanUpRequest(reqPtr, cleanUpClient);
-                throw UrlRequestException(res);
-              }
-              maxRedirects--;
-            } else {
-              cronet.Cronet_UrlRequest_Cancel(reqPtr);
-            }
-            if (_onRedirectReceived != null) {
-              _onRedirectReceived!(
-                  Pointer.fromAddress(args[0]).cast<Utf8>().toDartString(),
-                  respCode);
-            }
-          }
-          break;
-
-        // When server has sent the initial response
-        case 'OnResponseStarted':
-          {
-            final respCode = statusChecker(
-                Pointer.fromAddress(args[0]).cast<Cronet_UrlResponseInfo>(),
-                100,
-                299,
-                () => cleanUpRequest(reqPtr,
-                    cleanUpClient)); // If NOT a 1XX or 2XX status code, throw Exception
-            log('Response started');
-            if (_onResponseStarted != null) {
-              _onResponseStarted!(respCode);
-            }
-          }
-          break;
-        // Read a chunk of data.
-        // This is where we actually read
-        // the response from the server.
-        //
-        // Data gets added to the stream here.
-        // ReadDataCallback is invoked here
-        // with data received, no of bytes read
-        // and a function which can be called
-        // to continue reading.
-        case 'OnReadCompleted':
-          {
-            final request = Pointer<Cronet_UrlRequest>.fromAddress(args[0]);
-            final info = Pointer<Cronet_UrlResponseInfo>.fromAddress(args[1]);
-            final buffer = Pointer<Cronet_Buffer>.fromAddress(args[2]);
-            final bytesRead = args[3];
-
-            log('Recieved: $bytesRead');
-            final respCode = statusChecker(
-                info,
-                100,
-                299,
-                () => cleanUpRequest(reqPtr,
-                    cleanUpClient)); // If NOT a 1XX or 2XX status code, throw Exception
-            final data = cronet.Cronet_Buffer_GetData(buffer)
-                .cast<Uint8>()
-                .asTypedList(bytesRead);
-
-            // invoke the callback
-            if (_onReadData != null) {
-              _onReadData!(data.toList(growable: false), bytesRead, respCode,
-                  () {
-                final res = cronet.Cronet_UrlRequest_Read(request, buffer);
-                if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
-                  cleanUpRequest(reqPtr, cleanUpClient);
-                  throw UrlRequestException(res);
-                }
-              });
-            } else {
-              // or, add data to the stream
-              // why .toList - SEE ISSUE #8
-              _controller.sink.add(data.toList(growable: false));
-              final res = cronet.Cronet_UrlRequest_Read(request, buffer);
-              if (res != Cronet_RESULT.Cronet_RESULT_SUCCESS) {
-                cleanUpRequest(reqPtr, cleanUpClient);
-                _controller.addError(UrlRequestException(res));
-                _controller.close();
-              }
-            }
-          }
-          break;
-        // When there is any network error
-        // We will shut everything down after this.
-        case 'OnFailed':
-          {
-            final error =
-                Pointer.fromAddress(args[0]).cast<Utf8>().toDartString();
-            cleanUpRequest(reqPtr, cleanUpClient);
-            if (_onFailed != null) {
-              _onFailed!(HttpException(error));
-            }
-            if (_onReadData == null) {
-              _controller.addError(HttpException(error));
-              _controller.close();
-            }
-          }
-          break;
-        // when the request is cancelled
-        // We will shut everything down after this.
-        case 'OnCanceled':
-          {
-            cleanUpRequest(reqPtr, cleanUpClient);
-            if (_onCanceled != null) {
-              _onCanceled!();
-            }
-            if (_onReadData == null) {
-              _controller.close();
-            }
-          }
-          break;
-        // when the request is succesfully done
-        // all the data has received.
-        // We will shut everything down after this.
-        case 'OnSucceeded':
-          {
-            cleanUpRequest(reqPtr, cleanUpClient);
-            if (_onSuccess != null) {
-              final respInfoPtr =
-                  Pointer.fromAddress(args[0]).cast<Cronet_UrlResponseInfo>();
-              _onSuccess!(cronet.Cronet_UrlResponseInfo_http_status_code_get(
-                  respInfoPtr));
-            }
-            if (_onReadData == null) {
-              _controller.close();
-            }
-          }
-          break;
-        default:
-          {
-            break;
-          }
-      }
-    }, onError: (Object error) {
-      log(error.toString());
-    });
-  }
 }

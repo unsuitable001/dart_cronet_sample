@@ -9,8 +9,8 @@ import 'package:ffi/ffi.dart';
 import 'dylib_handler.dart';
 import 'enums.dart';
 import 'generated_bindings.dart';
-import 'http_client_request.dart';
 import 'quic_hint.dart';
+import 'http_client_request.dart';
 
 // Cronet library is loaded in global scope
 final _cronet = Cronet(loadWrapper());

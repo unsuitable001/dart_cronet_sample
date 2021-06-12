@@ -14,15 +14,6 @@ void main(List<String> args) {
         .then((HttpClientRequest request) {
       request.headers
           .set(HttpHeaders.cacheControlHeader, 'max-age=3600, must-revalidate');
-      /* The alternate API introduced.
-    NOTE: If we register callbacks & listen to the stream at the same time,
-    the stream will be closed immediately executing the onDone callback */
-
-      // request.registerCallbacks(onReadData: (contents, size, responseCode, next) {
-      //   print(utf8.decoder.convert(contents));
-      //   print('Status: $responseCode')
-      //   next();
-      // }, onSuccess: (responseCode) => print("cronet implemenation took: ${stopwatch.elapsedMilliseconds} ms"));
       if (i == 2) {
         client.close(); // We will shut down the client after 3 connections.
       }
@@ -36,6 +27,19 @@ void main(List<String> args) {
     });
   }
 
+  // Alternate API
+
   final client2 = HttpClient();
-  client2.close();
+  client2
+      .getUrl(Uri.parse('http://info.cern.ch/'))
+      .then((HttpClientRequest request) {
+    request.registerCallbacks((data, bytesRead, responseCode, next) {
+      print(utf8.decoder.convert(data));
+      print('Status: $responseCode');
+      next();
+    },
+        onSuccess: (responseCode) =>
+            print('Done with status: $responseCode')).catchError(
+        (e) => print(e));
+  });
 }

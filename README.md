@@ -57,16 +57,6 @@ import 'package:cronet_sample/cronet_sample.dart';
   client
       .getUrl(Uri.parse('http://info.cern.ch/'))
       .then((HttpClientRequest request) {
-    /* The alternate API.
-    NOTE: If we register callbacks & listen to the stream at the same time,
-    the stream will be closed immediately executing the onDone callback */
-
-    // request.registerCallbacks(onReadData: (contents, size, responseCode, next) {
-    //   print(utf8.decoder.convert(contents));
-    //   print('Status: $responseCode')
-    //   next();
-    // }, onSuccess: (responseCode) => print('Done! Status: $responseCode'));
-
     return request.close();
   }).then((HttpClientResponse response) {
     response.transform(utf8.decoder).listen((contents) {
@@ -74,6 +64,24 @@ import 'package:cronet_sample/cronet_sample.dart';
     },
       onDone: () => print(
         'Done!'));
+  });
+```
+
+### Alternate API
+
+```dart
+  final client = HttpClient();
+  client
+      .getUrl(Uri.parse('http://info.cern.ch/'))
+      .then((HttpClientRequest request) {
+    request.registerCallbacks((data, bytesRead, responseCode, next) {
+      print(utf8.decoder.convert(data));
+      print('Status: $responseCode');
+      next();
+    },
+        onSuccess: (responseCode) =>
+            print('Done with status: $responseCode')).catchError(
+        (e) => print(e));
   });
 ```
 
