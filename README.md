@@ -68,7 +68,7 @@ import 'package:cronet_sample/cronet_sample.dart';
     // }, onSuccess: (responseCode) => print('Done! Status: $responseCode'));
 
     return request.close();
-  }).then((Stream<List<int>> response) {
+  }).then((HttpClientResponse response) {
     response.transform(utf8.decoder).listen((contents) {
       print(contents);
     },

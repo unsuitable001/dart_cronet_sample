@@ -27,7 +27,7 @@ void main(List<String> args) {
         client.close(); // We will shut down the client after 3 connections.
       }
       return request.close();
-    }).then((Stream<List<int>> response) {
+    }).then((HttpClientResponse response) {
       response.transform(utf8.decoder).listen((contents) {
         print(contents);
       }, onDone: () {

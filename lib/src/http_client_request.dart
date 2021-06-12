@@ -15,6 +15,7 @@ import 'generated_bindings.dart';
 
 part '../third_party/http_headers.dart';
 part '../third_party/http_date.dart';
+part 'http_client_response.dart';
 
 // Type definitions for various callbacks
 typedef RedirectReceivedCallback = void Function(
@@ -107,7 +108,7 @@ class HttpClientRequest implements IOSink {
   ///
   /// Consumable similar to [HttpClientResponse]
   @override
-  Future<Stream<List<int>>> close() {
+  Future<HttpClientResponse> close() {
     return Future(() {
       if (_isAborted) {
         throw Exception('Request is already aborted');
@@ -144,7 +145,7 @@ class HttpClientRequest implements IOSink {
         throw UrlRequestException(res2);
       }
       _cbh.listen(_request, () => _clientCleanup(this));
-      return _cbh.stream;
+      return HttpClientResponse._(_cbh.stream);
     });
   }
 
@@ -171,12 +172,11 @@ class HttpClientRequest implements IOSink {
     });
   }
 
-  /// Done is same as [close]. A [Stream<List<int>>] future that will complete once the response is available.
-  /// Analogus to [HttpClientResponse].
+  /// Done is same as [close]. A [HttpClientResponse] future that will complete once the response is available.
   ///
   /// If an error occurs before the response is available, this future will complete with an error.
   @override
-  Future<Stream<List<int>>> get done => close();
+  Future<HttpClientResponse> get done => close();
 
   @override
   void add(List<int> data) {
