@@ -43,6 +43,12 @@ cronet_binaries/
 *.jar
 *.cxx
 
+# Jar dependencies should be published to pub
+!android/libs/*
+
+# Cronet binaries for android should be published to pub
+!android/src/main/jniLibs/**
+
 *.flutter-plugins
 *.flutter-plugins-dependencies
 
